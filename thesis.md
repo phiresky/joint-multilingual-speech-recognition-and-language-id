@@ -3,7 +3,7 @@
 author:
 - 'Robin'
 bibliography:
-- 'http://localhost:23119/better-bibtex/collection?/0/SMJR24NP.biblatex'
+- 'bib.bib'
 title: |
     Backchannel Prediction for Conversational Speech Using Recurrent Neural
     Networks
@@ -17,93 +17,107 @@ Motivation, Goals
 
 # Backchannel Prediction {#sec:extraction}
 
-A backchannel is generally defined as any kind of feedback a listener
+A listener backchannel is generally defined as any kind of feedback a listener
 gives a speaker as an acknowlegment in a primarily one-way conversation.
-This can be 
-In this paper, we concentrate on short phrasal backchannels consisting
+They include but are not limited to nodding [@watanabe_voice_1989], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport , which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
+
+(-> motivation)
+This thesis concentrates on short phrasal backchannels consisting
 of a maximum of three words. We try to predict these for a given speaker
-audio channel in a causal way.
+audio channel in a causal way, using only past information. This allows the predictor to be used in an online environment, for example to make a conversation with an artificial assistant more natural.
 
 ## BC Utterance selection {#sec:extractio:subsec:bc-utterance-selection}
 
-There are different kinds of phrasal backchannels, they can be
-non-commital, positive, negative, questioning, et cetera. To simplify
-the problem, we initially only try to predict the trigger times for any
+The definition of backchannels varies in literature. There are many different kinds of phrasal backchannels, they can be non-commital ("uh huh", "yeah"), positive/confirming ("oh how neat", "great"), negative/surprised ("you're kidding", "oh my god"), questioning ("oh are you", "is that right"), et cetera.
+To simplify the problem, we initially only try to predict the trigger times for any
 type of backchannel, ignoring different kinds of positive or negative
-responses. Later we try to distinguish between a limited set of
+responses. Later we also try to distinguish between a limited set of
 categories.
 
 ## Training area selection
 
+We generally assume to have two seperate audio tracks, one for the speaker and one for the listener each with the corresponding transcriptions.
 We need to choose which areas of audio we use to train the network. We
 want to predict the backchannel without future information (causally /
 online), so we need to train the network to detect segments of audio
 from the speaker track that probably cause a backchannel in the listener
-track. We choose the beginning of the backchannel utterance as an anchor
-and use a fixed range before that as the positive prediction area. This
-approach is easy, though it may not be optimal because the delay between
-the last utterance of the speaker and the backchannel can vary.
+track. The easiest method is to choose the beginning of the utterance in the transcript of the listener channel as an anchor $t$, and then use a fixed context range of width $w$ before that as the audio range to train the network to predict a backchannel $[t-w, t]$. The width can range from a few hundred milliseconds to multiple seconds. We feed all the extracted features for this time range into the network at once, from which it will predict if a backchannel at time $t$ is appropriate. This approach is easy because it only requires searching for all backchannel utterance timestamps and then extracting the calculated range of audio. It may not be optimal though, because the delay between the last utterance of the speaker and the backchannel can vary significantly in the training data. This means it is not guaranteed that the training range will contain the actual trigger for the backchannel, which is assumed to be the last few words said by the speaker, and even if it does the last word will not be aligned within the context. This causes the need for the network to first learn to align it's input, making training harder and slower.
 
-bisher nicht probiert
 Another interesting anchor is the last few words before a backchannel.
-We could for example choose \([t-0.5s, t+0.5s]\), where t is the center
-of the last speaker utterance before the backchannel, but then we need
-to be careful not to use any future data.
+We could for example choose $t$ as the center of the last speaker utterance before the backchannel, and then use $[t-0.5s, t+0.5s]$ as the training range. This proved to be hard because without manual alignment it isn't clear what the last relevant utterance even is, and in many cases the relevant utterance ends after the backchannel happens, so we would need to be careful not to use any future data. The first approach seemed to work reasonably well, so we did not do any further experiments with the second approach.
 
-We also need to choose areas to predict zero i.e. “no backchannel”, so
-the network is not biased to always predict a backchannel. For this we
-can choose the range a few seconds before each backchannel, because in
-that area the listener explicitly decided not to give a backchannel
-response yet.
+
+We also need to choose areas to predict zero i.e. “no backchannel” (NBC). This should be in about the same amount as backchannel samples, so the network is not biased towards one or the other.
+To create this balanced data set, we can choose the range a few seconds before each backchannel as a negative sample. This gives us an exactly balanced data set, and the negative samples are intuitively meaningful, because in that area the listener explicitly decided not to give a backchannel response yet, so it is sensible to assume whatever the speaker is saying is not a trigger for backchannels.
 
 ## Feature selection
 
 The most commonly used audio features in related research are fast and
-slow pitch slopes and pauses of varying lengths.
+slow voice pitch slopes and pauses of varying lengths.
 [@ward2000prosodic; @eemcs18627; @Morency2010]. Because our network does
 automatic feature detection, we simply feed it the absolute pitch and
 power (volume) values for a given time context, from which it is able to
-calculate the pitch slopes and pause triggers on its own.
+calculate the pitch slopes and pause triggers on its own by substracting the neighboring values in the time context for each feature.
 
-Additionally, we try to use other tonal features such as the fundamental
-frequency variation (FFV) [@laskowski2008fundamental] , the
-Mel-frequency cepstral coefficients (MFCC) \[ref\] and a set of
-bottleneck features trained on phoneme recognition \[ref\]. Because our
-training data set is limited, we easily run into overfitting problems
+We also try to use other tonal features used for speech recognition in addition and instead of pitch and power.
+The first feature is the fundamental frequency variation spectrum (FFV) [@laskowski2008fundamental], which is a representation of changes in the fundamental frequency over time, giving a more accurate view of the pitch progression than the single-dimensional pitch value which can be very noisy. This feature has seven dimensions in the default configuration given by the Janus Recognition Toolkit.
+
+Other features we tried include the Mel-frequency cepstral coefficients (MFCC) with 20 dimensions \[ref\] and a set of
+bottleneck features trained on phoneme recognition using a feed forward network\[ref\].
+
+Because our training data set is limited, we easily run into overfitting problems
 with a large input feature dimension.
+
+All of the features are extracted with a window size of 32 milliseconds, overlapping each other with a stride of 10 milliseconds. This gives us 100 frames per second.
 
 ## Training and Neural Network Design {#training}
 
 We begin with a simple feed forward network. The input layer consists of
-all the chosen features over a fixed time context. One or more hidden
-layers with varying numbers of neurons follow. The output layer is
-(n+1)-dimensional, where n is the number of backchannel categories we
-want to predict. In the simplest case we train the network on the
-outputs \[1, 0\] for backchannels and \[0, 1\] for non-backchannels.
+all the chosen features over a fixed time context. With a time context of $c\,\si{ms}$ and a feature dimension of $f$, this gives us a input dimension of $f \times \floor{c \over \SI{10}{ms}}$.
+One or more hidden
+layers with varying numbers of neurons follow. After every layer we apply an activation or nonlinear function like tanh or ReLU. The output layer is
+$(n+1)$--dimensional, where n is the number of backchannel categories we
+want to predict. This layer has softmax as an activation function, which maps a $K$-dimensional vector of arbitrary values to values that are in the range $(0, 1]$ and that add up to 1, which allows us to interpret them as class probabilities.
 
+We then calculate categorical cross-entropy of the output values of the network and the ground truth from the training data set. This gives us the loss function as the function mapping from the network inputs to the cross-entropy output. We can now train the parameters of the network by deriving it individually for each of the neurons and descending the resulting gradient using the back-propagation algorithm [@rumelhart_learning_1986].
 
-The placement of backchannels is dependent on previous backchannels. If
-the previous utterance was a long time ago, the probability of a
-backchannel is higher and vice versa. To accommodate for this, we want
+In the simplest case (ignoring different kinds of backchannels) we train the network on the outputs $[1, 0]$ for backchannels and $[0, 1]$ for non-backchannels. A visualization of this architecture can be seen in @fig:nn_2h. In the following sections we will concentrate on this architecture.
+
+\include{net1}
+
+The placement of backchannels is dependent on previous backchannels: If
+the previous backchannel utterance was a long time ago, the probability of a
+backchannel happening shortly is higher and vice versa. To accommodate for this, we want
 the network to also take its previous internal state or outputs into
 account. We do this by modifying the above architecture to use
-Long-short term memory layers (LSTM) instead of feed forward layers.
+Long-short term memory layers (LSTM) instead of feed forward layers. LSTM neurons are recurrent, meaning they are connected to themselves in a time-delayed fashion, and they have an internal state cell which is transmitted through time and which has set and clear functions which are triggered by any combination of their inputs. LSTM networks are trained in similar fashion as feed forward networks, with the time-stacked layer instances unrolled into individual copies with some parameters shared before applying the backpropagation algorithm.
 
 ## Postprocessing
 
-The neural neural network gives us a noisy value between 0 and 1, which
+Our goal is to generate an artificial audio track containing utterances such as "uh-huh" or "yeah" at appropriate times. The neural neural network gives us a noisy value between 0 and 1, which
 we interpret as the probability of a backchannel happening at the given
-time. To convert this into discrete trigger timestamps, we run a
-low-pass filter over the network output and then use the maximum value
-of every output segment whose value is over a given threshold.
+time. To generate our audio track from this output, we need to convert the noisy floating value into discrete trigger timestamps. We first run a low-pass filter over the network output, which gives us
+a less noisy and more continous output function. Then we use a fixed trigger threshold to extract the ranges in the output where the predictor is fairly confident that a backchannel should happen.
+
+Within these ranges we have multiple possibilities to choose the trigger anchor, which is a fixed time before the actual trigger.
+
+The easiest method is to use the time of the maximum peak of every range where the value is larger than the threshold, but this requires us to wait until the value is lower than the threshold again before we can decide where the maximum is, which introduces another delay and is thus bad for live detection.
+
+Another possibility is to use the start of the range, but this can give us worse results because it might force the trigger to happen earlier than the time the network would give the highest rating.
+
+A compromise between the best quality and immediate decision is to use the first local maximum within the thresholded range. Because of the low-pass filter we mostly have few local maxima which differ from the global maximum within the given range, and it's easy to decide when the local maximum was reached by simply triggering as soon as the first derivate is $<0$.
+
+An example of this postprocessing procedure can be seen in @fig:postproc.
 
 
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{img/postprocessing.png}
     \caption{Postprocessing example}
-    \label{fig:my_label}
+    \label{fig:postproc}
 \end{figure}
+
+Another problem that arises is which low-pass filter to use. A simple gaussian blur uses future information which we do not want. One approach is to cut off the gaussian filter at some multiple of the standard deviation and have it offset to the left so the newest frame it uses is the present frame. Of course this causes the prediction to be delayed further. Another method is to use a predictive filter such as a Kalman Filter [@kalman_new_1960-1].
 
 ## Evaluation
 
@@ -112,7 +126,6 @@ monologuing segments from our training data and compare the prediction
 with the ground truth, calculating the precision, recall, and F1 score
 with varying margins of error.
 
-low-pass filter, trigger BC at maxima
 
 use random BC sample from training data
 
