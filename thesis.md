@@ -344,16 +344,29 @@ words (2.21%).
 
 ### Feature extraction
 
+
+#### Prosodic features
+
 We used the Janus Recognition Toolkit [@janus] for parts
-of the feature extraction (power, pitch tracking, FFV, MFCC). Features
-are extracted for 32ms windows, with a shift of 10ms A sample of the pitch and power features can be seen in @fig:pitchpow.
+of the feature extraction (power, pitch tracking, FFV, MFCC).
+These features are extracted for 32ms frame windows, with a shift of 10ms. A sample of the pitch and power features can be seen in @fig:pitchpow.
 
 ![Audio samples, transcription, pitch and power for a single audio channel. Note that the pitch value is only meaningful when the person is speaking.](img/20170208184917.png){#fig:pitchpow}
 
+
+#### Linguistic features
+
 In addition to these prosodic features, we also tried training Word2Vec [@mikolov_efficient_2013] on the Switchboard dataset.
-Word2Vec is a "Efficient Estimation of Word Representations in Vector Space". After training it on a lot of text, it will learn the meaning of the words from the contexts they appear in, and then give a mapping from each word in the vocabulary to a n-dimensional vector, where n is configurable. Similar words will appear close to each other in this vector space, and it's even possible to run semantic calculations on the result. For example calculating $\mathit{king} - \mathit{man} + \mathit{woman}$ gives the result $=\mathit{queen}$. Because our dataset is fairly small, we used small word vectors (5 - 20 dimensions).
+Word2Vec is a "Efficient Estimation of Word Representations in Vector Space". After training it on a lot of text, it will learn the meaning of the words from the contexts they appear in, and then give a mapping from each word in the vocabulary to a n-dimensional vector, where n is configurable. Similar words will appear close to each other in this vector space, and it's even possible to run semantic calculations on the result. For example calculating $\mathit{king} - \mathit{man} + \mathit{woman}$ gives the result $=\mathit{queen}$. Because our dataset is fairly small, we used relatively small word vectors (5 - 20 dimensions).
 
+For simplicity, we extract these features parallel to those output by Janus, with a 10 millisecond frame shift. To ensure we don't use any future information, we extract the word vector for the last word that ended _before_ the current frame timestamp. This way the predictor is in theory still online, though this assumes the existence of a speech recognizer with instant output.
 
+#### Context and stride
+
+We extract the features for a fixed time context. Then we use a subset of that range as the area we feed into the network. 
+As an example, we can extract the range [-2000ms, 0ms] for every feature, giving us 200 frames. We train the network on 1500ms of context, so we treat every offset like [-2000, -500ms], [-1990ms, -490ms], ..., [-1500ms, 0ms] as individual training samples. This gives us 50 training samples per backchannel utterance, greatly increasing the amount of training data, but introducing more smear as the network needs to learn to handle a larger variance in when the backchannel cue appears in its inputs, and thus reducing the confidence of its output.
+
+This turned out to not work very well, so in the end we settled on only extracting the features for the range [-w - 10ms, 0] where w is the context width, and training the network on [-w - 10ms, 10ms] and [-w, 0ms]. This gives us two training samples per utterance, reduces the smearing problem and at the same time force the network to learn to handle a full shift by one in its inputs, as it should.
 
 ## Training {#training-1}
 
