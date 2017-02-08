@@ -15,11 +15,82 @@ Motivation, Goals
 
 # Related Work
 
+
+Collection:
+
+- @watanabe_voice_1989-1
+    - not found
+- @okato_insertion_1996
+    - Languages: Japanese
+    - Truth type: utterances
+    - Features: Pause
+    - Method: HMM for pitch contour
+    - 
+    - Evaluation Method: 
+    - Margin of Error: (-100ms, +300ms) from target utterance end (?)
+- @ward_using_1996
+    - Japanese
+- @noguchi_prosody-based_1998
+    - Languages: Japanese
+    - Features: Prosodic (pause, frequency F0)
+- @ward_prosodic_2000
+    - English, Japanese
+    - Features: Low Pitch Cue, Pause
+    - Margin of error: (-500, 500)
+
+- @cathcart_shallow_2003
+    - English
+    - Features: trigrams, pauses
+    - Corpus: HCRC Map Task Corpus
+    - Eval Method: Precision, recall, F1
+
+- @fujie_conversation_2004
+    - Japanese
+    - Features: utterances, prosodic
+- @takeuchi_timing_2004
+    - Japanese
+    - features: porosodic
+    - Method: decision tree, C4.5 learning algorithm
+    - Corpus: SIG of Corpus-Based Research for Discourse and Dialogue, JSAI, 1999. ”Constructing a spoken dialogue dorpus as sharable research resource”
+    - Eval method: recall, precision
+- @kitaoka_response_2005
+    - Japanese
+    - Pitch, pause,
+    - Eval: precision, recall, F1
+
+- @nishimura_spoken_2007
+    - Japanese
+    - Features: Speech recog, 
+- @morency_predicting_2008
+    - English
+    - Features: Eye gaze, low pitch, pause
+    - HMM, CRF
+    - Margin of error: happens during actual BC utterance
+- @de_kok_multimodal_2009
+    - English
+    - Features: dialog, attention, head gestures, prosody (pitch, pause, etc)
+    - Margin: peak in our probabilities (see Section 3) occurs during an actual end-of-speaker-turn.
+- @morency_probabilistic_2010
+    - Dutch
+    - Corpus: MultiLis corpus
+    - Special: building consensus Fconsensus
+- @de_kok_learning_2010
+- @huang_learning_2010
+    - Subjective, on live corpus
+    - Fconsensus
+- @ozkan_concensus_2010
+    - RAPPORT dataset
+- @ozkan_latent_2010
+- @poppe_backchannel_2010
+- @de_kok_speaker-adaptive_2013
+- @ozkan_latent_2013
+- @de_kok_iterative_2014
+- @mueller_using_2015-2
 # Backchannel Prediction {#sec:extraction}
 
 A listener backchannel is generally defined as any kind of feedback a listener
 gives a speaker as an acknowlegment in a primarily one-way conversation.
-They include but are not limited to nodding [@watanabe_voice_1989], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport , which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
+They include but are not limited to nodding [@watanabe_voice_1989-1], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport , which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
 
 (-> motivation)
 This thesis concentrates on short phrasal backchannels consisting
@@ -54,7 +125,7 @@ To create this balanced data set, we can choose the range a few seconds before e
 
 The most commonly used audio features in related research are fast and
 slow voice pitch slopes and pauses of varying lengths.
-[@ward2000prosodic; @eemcs18627; @Morency2010]. Because our network does
+[@ward_prosodic_2000; @truong_rule-based_2010-1; @morency_probabilistic_2010]. Because our network does
 automatic feature detection, we simply feed it the absolute pitch and
 power (volume) values for a given time context, from which it is able to
 calculate the pitch slopes and pause triggers on its own by substracting the neighboring values in the time context for each feature.
