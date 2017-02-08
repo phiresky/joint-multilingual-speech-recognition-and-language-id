@@ -134,7 +134,7 @@ We also try to use other tonal features used for speech recognition in addition 
 The first feature is the fundamental frequency variation spectrum (FFV) [@laskowski2008fundamental], which is a representation of changes in the fundamental frequency over time, giving a more accurate view of the pitch progression than the single-dimensional pitch value which can be very noisy. This feature has seven dimensions in the default configuration given by the Janus Recognition Toolkit.
 
 Other features we tried include the Mel-frequency cepstral coefficients (MFCC) with 20 dimensions \[ref\] and a set of
-bottleneck features trained on phoneme recognition using a feed forward network\[ref\].
+bottleneck features trained on phoneme recognition using a feed forward network, which is used for speech recognition at the Interactive Systems Lab \[ref\].
 
 Because our training data set is limited, we easily run into overfitting problems
 with a large input feature dimension.
@@ -236,18 +236,25 @@ telephone conversations of five to ten minutes, 260 hours in total.
 These telephone conversations have complete transcriptions and word alignments
 [@swbalign]. As opposed to many other data sets, the transcriptions also contain backchannel utterances like _uh-huh_ and _yeah_, making it ideal for our task.
 
-The transcriptions are split into _utterances_, which are multiple words grouped by speech structure, for example: "did you want me to go ahead / okay well one thing i- i- i guess both of us have very much aware of the equality / uh it seems like women are uh just starting to really get some kind of equality not only in uh jobs but in the home where husbands are starting to help out a lot more than they ever did um". The slashes indicate utterance boundaries.
+The transcriptions are split into _utterances_, which are multiple words grouped by speech structure, for example: "did you want me to go ahead / okay well one thing i- i- i guess both of us have very much aware of the equality / uh it seems like women are uh just starting to really get some kind of equality not only in uh jobs but in the home where husbands are starting to help out a lot more than they ever did um". The slashes indicate utterance boundaries. Each of these utterance has a start time and stop time attached, where the stop time of one utterance is always the same as the start time of the next utterance. For longer periods of silence, a "[silence]" utterance is between them.
+
+The word alignments have the same format, except they are split into single words, each with start and stop time, with silence utterances being far more frequent.
+
+To better understand and visualize the dataset, we first wrote a complete visualization GUI for viewing and listening to audio data, together with transcriptions, markers and other data. This proved to be amazingly helpful. A screenshot of the UI inspecting a short portion of one of the phone conversations can be seen in @fig:amazing.
+
+![From top to bottom: Speaker A audio data, transcription, and word alignement, then the same for speaker B.](img/20170208185355.png){#fig:amazing}
 
 ## Extraction {#extraction-1}
+
+### Backchannel utterance selection
 
 We used annotations from The Switchboard Dialog Act Corpus [@swda] to
 decide which utterances to classify as backchannels. The SwDA contains
 categorical annotations for utterances for about half of the data of the
 Switchboard corpus. An excerpt of the most common categories can be seen in @tbl:swda.
 
-\begin{figure}
-\caption{Most common categories from the SwDA Corpus}\label{tbl:swda}
 \begin{longtable}{lp{3cm}lp{4cm}ll}
+\caption{Most common categories from the SwDA Corpus}\label{tbl:swda}\tabularnewline
 \toprule
 ~ & name & act\_tag & example & train\_count &
 full\_count\tabularnewline
@@ -267,8 +274,6 @@ full\_count\tabularnewline
 4624 & 4727\tabularnewline
 \bottomrule
 \end{longtable}
-\end{figure}
-
 
 We extracted all utterances containing one of the tags beginning with "b", and counted their frequency.
 
@@ -323,13 +328,6 @@ transcriptions, for example `[laughter-yeah] okay_1 [noise]` becomes
 Some utterances such as “uh” can be both backchannels and speech
 disfluencies. For example: "... pressed a couple of the buttons up in the / uh / the air conditioning panel i think and uh and it reads out codes that way". Note that the first _uh_ is it's own utterance and would thus be seen by our extractor as a backchannel. The second utterance has normal speech around it so we would ignore it. We only want those utterances that are actual backchannels, so after filtering by utterance text we only choose those that have either silence or another backchannel before them.
 
-This method gives us a total of 61645
-backchannels out of 391593 utterances (15.7%) or 71207 out of 3228128
-words (2.21%). We used the Janus Recognition Toolkit [@janus] for parts
-of the feature extraction (power, pitch tracking, FFV, MFCC). Features
-are extracted for 32ms windows, with a shift of 10ms. We also added a
-word2vec vocabulary trained on the word alignements.
-
 This gives us the following selection algorithm:
 ```python
 def is_backchannel(utterance):
@@ -340,9 +338,26 @@ def is_backchannel(utterance):
             (is_silent(previous_text) or is_backchannel(previous(utterance)))
 ```
 
+This method gives us a total of 61645
+backchannels out of 391593 utterances (15.7%) or 71207 out of 3228128
+words (2.21%).
+
+### Feature extraction
+
+We used the Janus Recognition Toolkit [@janus] for parts
+of the feature extraction (power, pitch tracking, FFV, MFCC). Features
+are extracted for 32ms windows, with a shift of 10ms A sample of the pitch and power features can be seen in @fig:pitchpow.
+
+![Audio samples, transcription, pitch and power for a single audio channel. Note that the pitch value is only meaningful when the person is speaking.](img/20170208184917.png){#fig:pitchpow}
+
+In addition to these prosodic features, we also tried training Word2Vec [@mikolov_efficient_2013] on the Switchboard dataset.
+Word2Vec is a "Efficient Estimation of Word Representations in Vector Space". After training it on a lot of text, it will learn the meaning of the words from the contexts they appear in, and then give a mapping from each word in the vocabulary to a n-dimensional vector, where n is configurable. Similar words will appear close to each other in this vector space, and it's even possible to run semantic calculations on the result. For example calculating $\mathit{king} - \mathit{man} + \mathit{woman}$ gives the result $=\mathit{queen}$. Because our dataset is fairly small, we used small word vectors (5 - 20 dimensions).
+
+
+
 ## Training {#training-1}
 
-We used Theano [@theano] with Lasagne [@lasagne] for rapid prototyping
+We used Theano [@theano] with Lasagne v1.0-dev [@lasagne] for rapid prototyping
 and testing of different parameters. We trained a total of over 200
 network configuration with various context lengths (500ms to 2000ms),
 context strides (1 to 4 frames), network depths ranging from one to four
@@ -388,8 +403,6 @@ given for the validation data set. In \autoref{fig:final}, our final
 results are given for the completely independent evaluation data set.
 
 # Conclusion
-
-\bibliographystyle{styles/spmpsci}
 
 
 # Bibliography
