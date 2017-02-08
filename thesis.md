@@ -141,7 +141,7 @@ with a large input feature dimension.
 
 All of the features are extracted with a window size of 32 milliseconds, overlapping each other with a stride of 10 milliseconds. This gives us 100 frames per second.
 
-## Training and Neural Network Design {#training}
+## Training and Neural Network Design {#sec:training}
 
 We begin with a simple feed forward network. The input layer consists of
 all the chosen features over a fixed time context. With a time context of $c\,\si{ms}$ and a feature dimension of $f$, this gives us a input dimension of $f \times \floor{c \over \SI{10}{ms}}$.
@@ -366,7 +366,12 @@ For simplicity, we extract these features parallel to those output by Janus, wit
 We extract the features for a fixed time context. Then we use a subset of that range as the area we feed into the network. 
 As an example, we can extract the range [-2000ms, 0ms] for every feature, giving us 200 frames. We train the network on 1500ms of context, so we treat every offset like [-2000, -500ms], [-1990ms, -490ms], ..., [-1500ms, 0ms] as individual training samples. This gives us 50 training samples per backchannel utterance, greatly increasing the amount of training data, but introducing more smear as the network needs to learn to handle a larger variance in when the backchannel cue appears in its inputs, and thus reducing the confidence of its output.
 
-This turned out to not work very well, so in the end we settled on only extracting the features for the range [-w - 10ms, 0] where w is the context width, and training the network on [-w - 10ms, 10ms] and [-w, 0ms]. This gives us two training samples per utterance, reduces the smearing problem and at the same time force the network to learn to correctly handle when its inputs are the same but offset by one.
+This turned out to not work very well, so in the end we settled on only extracting the features for the range [-w - 10ms, 0] where w is the context width, and training the network on [-w - 10ms, 10ms] and [-w, 0ms]. This gives us two training samples per utterance, reduces the smearing problem and at the same time force the network to learn to correctly handle when its inputs are the same or similar but offset by one.
+
+We can also choose to only use every n-th timestep, which we call the "context stride". This works under the assumption that the input features don't change with a high frequency, which greatly reduces the input dimension and speeds up training. In practice a stride of 2 worked well, meaning one frame every 20 milliseconds. This works great in combination with the above. For example, with a stride of 2 and a context size of 100ms, we would now get these two training samples (described as frame indices relative to the onset of the backchannel utterance):
+
+1. [-10, -8, -6, -4, -2, 0]
+2. [-11, -9, -7, -5, -3, -1]
 
 ## Training {#training-1}
 
@@ -378,6 +383,8 @@ hidden layers, layer sizes ranging from 15 to 100 neurons, activation
 functions (tanh and relu), gradient descent methods (SGD, Adadelta and
 Adam), dropout layers (0 to 50%) and layer types (feed forward and
 LSTM).
+
+In general, we used three variables to monitor training: Training loss, which is what the network optimizes, as defined in @sec:training. Validation loss, which is the same function, but on the seperate validation data set, and the validation error, which we define as $$1 - {\sum_{s \in S}\{1 \text{ if prediction}(s) = \text{truth}(s)\text{ else }0\} \over |S|},$$ where $S$ is all the frames for all the samples in the validation data set.
 
 We started with a simple model with a configuration of pitch and power as input and 800 ms of context, giving us $80\cdot 2 = 160$ input dimensions, hidden layers of 100 $\rightarrow$ 50 feed forward neurons. We trained this using many different gradient descent methods such as stochastic gradient descent (SGD), SGD with momentum, Nesterov momentum, Adadelta and Adam, each with fixed learning rates to start. The momentum methods add a speed variable to the descent. This can be interpreted similar to its physical name giver. Imagine a ball rolling down a mountain slope. For each time period, it keeps it's previous momentum and is thus able to jump over small dents in the ground (local minima). In our case, momentum worsened the results, so we stayed with SGD and Adadelta. 
 
@@ -397,19 +404,13 @@ These problem was solved by using Adam [@kingma_adam:_2014] instead of SGD, whic
 The LSTM networks we tested were prone to overfitting very quickly, but they still
 provided better results after two to three epochs than normal feed forward networks after 100 epochs. Overfitting happens when the results still improve on the training data set, but plateau or get worse on the validation data set. This means the network is starting to learn specific quirks in the training data set by heart, which it then can't apply on other data.
 
-We tried adding dropout layers to the networks to try and avoid overfitting and to generally improve the results. Dropout layers randomly disconnect a specific fraction of neurons in a layer, different for every training batch. This should in theory help the network interpret it's inputs even when it is partially "blind". For validation the dropout is deactivated, so the network is able to take advantage of every single feature when actually using it as a predictor. In this case, we tried adding different dropout settings such as "input (20% dropout) $\rightarrow$ 125 neurons (50% dropout) $\rightarrow$ 80 neurons (50% dropout) $\rightarrow$ output" but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
+We tried adding dropout layers to the networks to try and avoid overfitting and to generally improve the results. Dropout layers randomly disconnect a specified fraction of neurons in a layer, different for every training batch. This should in theory help the network interpret it's inputs even when it is partially "blind". For validation the dropout is deactivated, so the network is able to take advantage of every single feature when actually using it as a predictor. In this case, we tried adding different dropout settings such as "input (20% dropout) $\rightarrow$ 125 neurons (50% dropout) $\rightarrow$ 80 neurons (50% dropout) $\rightarrow$ output" but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
 
+![The same LSTM network trained without (left) and with (right) L2-Regularization. Note that without regularization the network starts overfitting after two epochs. With regularization training and validation loss mostly stay the same with regularization, and the validation error continues to improve. Training loss is blue, validation loss is red and validation error is orange.](img/20170209000001.png){#fig:l2reg}
 
 
 L2-Regularization reduced this problem and slightly improved the
-results.
-
-
-- softmax with categorical crossentropy for categorical output (1=BC, 0=NBC)
-- sigmoid with mean squared error for bell curve output
-
-
-validate error functions etc.
+results, as can be seen in the example in @fig:l2reg.
 
 ## Evaluation {#eval-1}
 
@@ -435,7 +436,102 @@ Margin of Error: 0ms to +1000ms. Precision, Recall and F1-Score are
 given for the validation data set. In \autoref{fig:final}, our final
 results are given for the completely independent evaluation data set.
 
-# Conclusion
 
+\begin{figure}
+\caption{Results on the Validation Set}\label{fig:survey}
+\subfloat[Results with various context lengths]{
+    \begin{tabular}{|c|c|c|c|}\hline
+    Context & Precision & Recall & F1-Score \\
+    \svhline
+    500ms & 0.219 & 0.466 & 0.298 \\
+    1000ms & 0.280 & 0.497 & 0.358 \\
+    \emph{1500ms} & 0.305 & 0.488 & \bf{0.375} \\
+    2000ms & 0.275 & 0.577 & 0.373 \\
+    \hline\end{tabular}
+}
+\subfloat[Results with various network configurations]{
+    \begin{tabular}{|c|c|c|c|}\hline
+    Layers & Precision & Recall & F1-Score \\
+    \svhline
+    $in \rightarrow 100 \rightarrow out$ & 0.280 & 0.542 & 0.369 \\
+    $in \rightarrow 50 \rightarrow 20 \rightarrow out$ & 0.291 & 0.506 & 0.370 \\
+    $in \rightarrow 70 \rightarrow 35\rightarrow out$ & 0.305 & 0.488 & \bf{0.375} \\
+    $in \rightarrow 100 \rightarrow 50 \rightarrow out$ & 0.303 & 0.473 & 0.369 \\
+    $in \rightarrow 70 \rightarrow 50 \rightarrow 35 \rightarrow out$ & 0.278 & 0.541 & 0.367 \\
+    \hline\end{tabular}
+}
+
+\subfloat[Results with various input features.]{
+    \begin{tabular}{|c|c|c|c|}\hline
+    Features & Precision & Recall & F1-Score \\
+    \svhline
+    power, ffv & 0.259 & 0.513 & 0.344 \\
+    power, pitch & 0.307 & 0.435 & 0.360 \\
+    power, pitch, mfcc & 0.278 & 0.514 & 0.360 \\
+    power, ffv, mfcc & 0.279 & 0.515 & 0.362 \\
+    power, pitch, word2vec$_{dim=5}$ & 0.304 & 0.474 & 0.370 \\
+    power, pitch, ffv, word2vec$_{dim=5}$ & 0.297 & 0.501 & 0.373 \\
+    power, pitch, ffv & 0.305 & 0.488 & 0.375 \\
+    power, pitch, word2vec$_{dim=10}$ & 0.316 & 0.479 & \bf{0.381} \\
+    \hline\end{tabular}
+}
+\subfloat[Results with various context frame strides]{
+    \begin{tabular}{|c|c|c|c|}\hline
+    Stride & Precision & Recall & F1-Score \\
+    \svhline
+    1 & 0.290 & 0.490 & 0.364 \\
+    \emph{2} & 0.305 & 0.488 & \bf{0.375} \\
+    4 & 0.285 & 0.498 & 0.363 \\
+    \hline\end{tabular}
+}
+
+\subfloat[Feed forward vs LSTM]{
+    \begin{tabular}{|c|c|c|c|}\hline
+    Layers & Precision & Recall & F1-Score \\
+    \svhline
+    Feed Forward ($in \rightarrow 100 \rightarrow 50 \rightarrow out$) & 0.242 & 0.490 & 0.324 \\
+    Feed Forward ($in \rightarrow 70 \rightarrow 35 \rightarrow out$) & 0.251 & 0.468 & 0.327 \\
+    LSTM ($in \rightarrow 70 \rightarrow 35 \rightarrow out$) & 0.305 & 0.488 & \bf{0.375} \\
+    \hline\end{tabular}
+}
+
+\end{figure}
+
+
+\newcommand{\csubfloat}[2][]{%
+  \makebox[0pt]{\subfloat[#1]{#2}}%
+}
+\captionsetup[subfigure]{width=\textwidth}
+\begin{figure}
+\centering
+\caption{Final best results on the evaluation set (chosen by validation set)}\label{fig:final}
+\csubfloat[Comparison with previous research. Mueller et al. did their evaluation without the constraints defined in \autoref{eval-1}, so we adjusted our baseline and evaluation to match their setup]{
+    \begin{tabular}{|c|c|c|c|}\hline
+        Predictor & Precision & Recall & F1-Score \\
+        \svhline
+        Baseline (random) & 0.0417 & 0.0417 & 0.0417 \\
+        Müller et al. (offline) \cite{mueller} & -- & -- & 0.109 \\
+        Our results (online) & 0.0929 & 0.378 & \bf{0.149} \\
+    \hline\end{tabular}
+}
+
+\csubfloat[Results with various margins of error used in other research \cite{survey}]{
+    \begin{tabular}{|c|l|c|c|c|}\hline
+        Margin of Error & Constraint & Precision & Recall & F1-Score \\
+        \svhline
+        \SIrange{-200}{+200}{ms} && 0.163 & 0.348 & 0.222 \\
+        \SIrange{-100}{+500}{ms} && 0.225 & 0.414 & 0.291 \\
+        \SIrange{-500}{+500}{ms} && 0.247 & 0.536 & 0.339 \\
+        \hline
+        \SIrange{0}{+1000}{ms} & \parbox[t]{4cm}{Baseline (correct BC count at random times)} & 0.111 & 0.0521 & 0.0708 \\
+         & Balanced Precision and Recall & \bf{0.331} & 0.329 & 0.330 \\ % lstm-best-layers-100
+         & Best F1-Score (only prosodic features) & 0.294 & 0.488 & \bf{0.367} \\
+         & Best F1-Score (including word2vec) & 0.300 & 0.473 & \bf{0.367} \\
+    \hline\end{tabular}
+}
+\end{figure}
+\section{Conclusion}
+
+# Conclusion
 
 # Bibliography
