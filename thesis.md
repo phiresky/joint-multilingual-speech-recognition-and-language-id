@@ -366,7 +366,7 @@ For simplicity, we extract these features parallel to those output by Janus, wit
 We extract the features for a fixed time context. Then we use a subset of that range as the area we feed into the network. 
 As an example, we can extract the range [-2000ms, 0ms] for every feature, giving us 200 frames. We train the network on 1500ms of context, so we treat every offset like [-2000, -500ms], [-1990ms, -490ms], ..., [-1500ms, 0ms] as individual training samples. This gives us 50 training samples per backchannel utterance, greatly increasing the amount of training data, but introducing more smear as the network needs to learn to handle a larger variance in when the backchannel cue appears in its inputs, and thus reducing the confidence of its output.
 
-This turned out to not work very well, so in the end we settled on only extracting the features for the range [-w - 10ms, 0] where w is the context width, and training the network on [-w - 10ms, 10ms] and [-w, 0ms]. This gives us two training samples per utterance, reduces the smearing problem and at the same time force the network to learn to handle a full shift by one in its inputs, as it should.
+This turned out to not work very well, so in the end we settled on only extracting the features for the range [-w - 10ms, 0] where w is the context width, and training the network on [-w - 10ms, 10ms] and [-w, 0ms]. This gives us two training samples per utterance, reduces the smearing problem and at the same time force the network to learn to correctly handle when its inputs are the same but offset by one.
 
 ## Training {#training-1}
 
@@ -379,8 +379,28 @@ functions (tanh and relu), gradient descent methods (SGD, Adadelta and
 Adam), dropout layers (0 to 50%) and layer types (feed forward and
 LSTM).
 
-The LSTM networks we tested were prone to overfitting quickly, but still
-provided better results than normal feed forward networks.
+We started with a simple model with a configuration of pitch and power as input and 800 ms of context, giving us $80\cdot 2 = 160$ input dimensions, hidden layers of 100 $\rightarrow$ 50 feed forward neurons. We trained this using many different gradient descent methods such as stochastic gradient descent (SGD), SGD with momentum, Nesterov momentum, Adadelta and Adam, each with fixed learning rates to start. The momentum methods add a speed variable to the descent. This can be interpreted similar to its physical name giver. Imagine a ball rolling down a mountain slope. For each time period, it keeps it's previous momentum and is thus able to jump over small dents in the ground (local minima). In our case, momentum worsened the results, so we stayed with SGD and Adadelta. 
+
+We tried different weight initialization methods. Initializing all weights with zero gave significantly worse results than random initialization, so we stayed with the Lasagne default of Glorot uniform initialization, which uses uniformly distributed random values, with the maximum value scaled so it makes statistical sense in the layer dimensions [@glorot_understanding_2010].
+
+We compared online and offline prediction, where offline prediction got 400 ms of past audio and 400 ms of future audio from the onset of the backchannel utterance. Offline prediction gave 18% better results, but of course we are more interested in online prediction.
+
+The first simple LSTM we tested by simply replacing the feed forward layers with LSTM layers immediately improved the results by 16% without any further adjustments. But this showed the issues with a fixed learning rate, as the gradient regularily exploded after every 10 - 15 epochs, as can be seen in @fig:exploding. One epoch is defined as one whole backward pass of all the training data through the network. When adding FFV, increasing the input dimension per time frame from 2 to 9, SGD stopped working at all without manually tuning the learning rate.
+
+![Exploding gradient while training a LSTM network. Shown is the training loss over epochs](img/20170208233441.png){#fig:exploding}
+
+These problem was solved by using Adam [@kingma_adam:_2014] instead of SGD, which is a gradient descent method related to Adadelta and Adagrad which also incorporates momentum in some way, see @fig:adam. No one really understands how these work, but Adam with a fixed learning rate of 0.001 worked great for us, so we did all further testing using Adam.
+
+![The Adam method for stochastic optimization. I have no idea what any of those letters mean, but it's been cited a bazillion times and works great.](img/adam.png){#fig:adam}
+
+
+The LSTM networks we tested were prone to overfitting very quickly, but they still
+provided better results after two to three epochs than normal feed forward networks after 100 epochs. Overfitting happens when the results still improve on the training data set, but plateau or get worse on the validation data set. This means the network is starting to learn specific quirks in the training data set by heart, which it then can't apply on other data.
+
+We tried adding dropout layers to the networks to try and avoid overfitting and to generally improve the results. Dropout layers randomly disconnect a specific fraction of neurons in a layer, different for every training batch. This should in theory help the network interpret it's inputs even when it is partially "blind". For validation the dropout is deactivated, so the network is able to take advantage of every single feature when actually using it as a predictor. In this case, we tried adding different dropout settings such as "input (20% dropout) $\rightarrow$ 125 neurons (50% dropout) $\rightarrow$ 80 neurons (50% dropout) $\rightarrow$ output" but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
+
+
+
 L2-Regularization reduced this problem and slightly improved the
 results.
 
