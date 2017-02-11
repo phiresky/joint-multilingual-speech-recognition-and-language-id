@@ -86,10 +86,11 @@ Collection:
 - @ozkan_latent_2013
 - @de_kok_iterative_2014
 - @mueller_using_2015-2
+
 # Backchannel Prediction {#sec:extraction}
 
 A listener backchannel is generally defined as any kind of feedback a listener
-gives a speaker as an acknowlegment in a primarily one-way conversation.
+gives a speaker as an acknowledgment in a primarily one-way conversation.
 They include but are not limited to nodding [@watanabe_voice_1989-1], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport , which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
 
 (-> motivation)
@@ -99,7 +100,7 @@ audio channel in a causal way, using only past information. This allows the pred
 
 ## BC Utterance selection {#sec:extractio:subsec:bc-utterance-selection}
 
-The definition of backchannels varies in literature. There are many different kinds of phrasal backchannels, they can be non-commital ("uh huh", "yeah"), positive/confirming ("oh how neat", "great"), negative/surprised ("you're kidding", "oh my god"), questioning ("oh are you", "is that right"), et cetera.
+The definition of backchannels varies in literature. There are many different kinds of phrasal backchannels, they can be non-committal ("uh huh", "yeah"), positive/confirming ("oh how neat", "great"), negative/surprised ("you're kidding", "oh my god"), questioning ("oh are you", "is that right"), et cetera.
 To simplify the problem, we initially only try to predict the trigger times for any
 type of backchannel, ignoring different kinds of positive or negative
 responses. Later we also try to distinguish between a limited set of
@@ -107,7 +108,7 @@ categories.
 
 ## Training area selection
 
-We generally assume to have two seperate audio tracks, one for the speaker and one for the listener each with the corresponding transcriptions.
+We generally assume to have two separate audio tracks, one for the speaker and one for the listener each with the corresponding transcriptions.
 We need to choose which areas of audio we use to train the network. We
 want to predict the backchannel without future information (causally /
 online), so we need to train the network to detect segments of audio
@@ -128,7 +129,7 @@ slow voice pitch slopes and pauses of varying lengths.
 [@ward_prosodic_2000; @truong_rule-based_2010-1; @morency_probabilistic_2010]. Because our network does
 automatic feature detection, we simply feed it the absolute pitch and
 power (volume) values for a given time context, from which it is able to
-calculate the pitch slopes and pause triggers on its own by substracting the neighboring values in the time context for each feature.
+calculate the pitch slopes and pause triggers on its own by subtracting the neighboring values in the time context for each feature.
 
 We also try to use other tonal features used for speech recognition in addition and instead of pitch and power.
 The first feature is the fundamental frequency variation spectrum (FFV) [@laskowski2008fundamental], which is a representation of changes in the fundamental frequency over time, giving a more accurate view of the pitch progression than the single-dimensional pitch value which can be very noisy. This feature has seven dimensions in the default configuration given by the Janus Recognition Toolkit.
@@ -225,7 +226,7 @@ $$
     = 2 \cdot \frac{\mathit{Precision}\cdot\mathit{Recall}}{\mathit{Precision}+\mathit{Recall}}
 $$
 
-We use the F1-Score to objectively measure the performance of our predictors.
+We use the F1-Score to objectively measure the performance of our prediction systems.
 
 # Experimental Setup {#experiments}
 
@@ -233,16 +234,16 @@ We use the F1-Score to objectively measure the performance of our predictors.
 
 We used the switchboard dataset [@swb] which consists of 2438
 telephone conversations of five to ten minutes, 260 hours in total.
-These telephone conversations have complete transcriptions and word alignments
-[@swbalign]. As opposed to many other data sets, the transcriptions also contain backchannel utterances like _uh-huh_ and _yeah_, making it ideal for our task.
+Pairs of participants from across the United States were encouraged to talk about a specific topic selected from 70 possibilities. Conversation partners and topics were selected so two people would only talk once with each other and every person would only discuss a specific topic once.
+These telephone conversations are annotated with transcriptions and word alignments \cite{swbalign} with a total of 390k utterances or 3.3 million words. The audio data is given as stereo files, where the first speaker is on the left channel and the second speaker on the right channel. We split the dataset randomly into 2000 conversations for training, 200 for validation and 238 for evaluation. As opposed to many other data sets, the transcriptions also contain backchannel utterances like _uh-huh_ and _yeah_, making it ideal for this task.
 
 The transcriptions are split into _utterances_, which are multiple words grouped by speech structure, for example: "did you want me to go ahead / okay well one thing i- i- i guess both of us have very much aware of the equality / uh it seems like women are uh just starting to really get some kind of equality not only in uh jobs but in the home where husbands are starting to help out a lot more than they ever did um". The slashes indicate utterance boundaries. Each of these utterance has a start time and stop time attached, where the stop time of one utterance is always the same as the start time of the next utterance. For longer periods of silence, a "[silence]" utterance is between them.
 
-The word alignments have the same format, except they are split into single words, each with start and stop time, with silence utterances being far more frequent.
+The word alignments have the same format, except they are split into single words, each with start and stop time, with _[silence]_ utterances being far more frequent.
 
-To better understand and visualize the dataset, we first wrote a complete visualization GUI for viewing and listening to audio data, together with transcriptions, markers and other data. This proved to be amazingly helpful. A screenshot of the UI inspecting a short portion of one of the phone conversations can be seen in @fig:amazing.
+To better understand and visualize the dataset, we first wrote a complete visualization GUI for viewing and listening to audio data, together with transcriptions, markers and other data. This proved to be very helpful. A screenshot of the UI inspecting a short portion of one of the phone conversations can be seen in @fig:amazing.
 
-![From top to bottom: Speaker A audio data, transcription, and word alignement, then the same for speaker B.](img/20170208185355.png){#fig:amazing}
+![From top to bottom: Speaker A audio data, transcription, and word alignment, then the same for speaker B.](img/20170208185355.png){#fig:amazing}
 
 ## Extraction {#extraction-1}
 
@@ -345,7 +346,7 @@ words (2.21%).
 ### Feature extraction
 
 
-#### Prosodic features
+#### Acoustic features
 
 We used the Janus Recognition Toolkit [@janus] for parts
 of the feature extraction (power, pitch tracking, FFV, MFCC).
@@ -357,14 +358,14 @@ These features are extracted for 32ms frame windows, with a shift of 10ms. A sam
 #### Linguistic features
 
 In addition to these prosodic features, we also tried training Word2Vec [@mikolov_efficient_2013] on the Switchboard dataset.
-Word2Vec is a "Efficient Estimation of Word Representations in Vector Space". After training it on a lot of text, it will learn the meaning of the words from the contexts they appear in, and then give a mapping from each word in the vocabulary to a n-dimensional vector, where n is configurable. Similar words will appear close to each other in this vector space, and it's even possible to run semantic calculations on the result. For example calculating $\mathit{king} - \mathit{man} + \mathit{woman}$ gives the result $=\mathit{queen}$. Because our dataset is fairly small, we used relatively small word vectors (5 - 20 dimensions).
+Word2Vec is a "Efficient Estimation of Word Representations in Vector Space". After training it on a lot of text, it will learn the meaning of the words from the contexts they appear in, and then give a mapping from each word in the vocabulary to a n-dimensional vector, where n is configurable. Similar words will appear close to each other in this vector space, and it's even possible to run semantic calculations on the result. For example calculating $\mathit{king} - \mathit{man} + \mathit{woman}$ gives the result $=\mathit{queen}$ with the highest confidence. Because our dataset is fairly small, we used relatively small word vectors (5 - 20 dimensions).
 
-For simplicity, we extract these features parallel to those output by Janus, with a 10 millisecond frame shift. To ensure we don't use any future information, we extract the word vector for the last word that ended _before_ the current frame timestamp. This way the predictor is in theory still online, though this assumes the existence of a speech recognizer with instant output.
+For simplicity, we extract these features parallel to those output by Janus, with a 10 millisecond frame shift. To ensure we don't use any future information, we extract the word vector for the last word that ended _before_ the current frame timestamp. This way the predictor is in theory still online, though this assumes the availability of a speech recognizer with instant output.
 
 #### Context and stride
 
 We extract the features for a fixed time context. Then we use a subset of that range as the area we feed into the network. 
-As an example, we can extract the range [-2000ms, 0ms] for every feature, giving us 200 frames. We train the network on 1500ms of context, so we treat every offset like [-2000, -500ms], [-1990ms, -490ms], ..., [-1500ms, 0ms] as individual training samples. This gives us 50 training samples per backchannel utterance, greatly increasing the amount of training data, but introducing more smear as the network needs to learn to handle a larger variance in when the backchannel cue appears in its inputs, and thus reducing the confidence of its output.
+As an example, we can extract the range [-2000ms, 0ms] for every feature, giving us 200 frames. We train the network on 1500ms of context, so we treat every offset like [-2000, -500ms], [-1990ms, -490ms], ..., [-1500ms, 0ms] as individual training samples. This gives us 50 training samples per backchannel utterance, greatly increasing the amount of training data, but introducing smear as the network needs to learn to handle a larger variance in when the backchannel cue appears in its inputs, and thus reducing the confidence of its output.
 
 This turned out to not work very well, so in the end we settled on only extracting the features for the range [-w - 10ms, 0] where w is the context width, and training the network on [-w - 10ms, 10ms] and [-w, 0ms]. This gives us two training samples per utterance, reduces the smearing problem and at the same time force the network to learn to correctly handle when its inputs are the same or similar but offset by one.
 
@@ -384,7 +385,10 @@ functions (tanh and relu), gradient descent methods (SGD, Adadelta and
 Adam), dropout layers (0 to 50%) and layer types (feed forward and
 LSTM).
 
-In general, we used three variables to monitor training: Training loss, which is what the network optimizes, as defined in @sec:training. Validation loss, which is the same function, but on the seperate validation data set, and the validation error, which we define as $$1 - {\sum_{s \in S}\{1 \text{ if prediction}(s) = \text{truth}(s)\text{ else }0\} \over |S|},$$ where $S$ is all the frames for all the samples in the validation data set.
+In general, we used three variables to monitor training: The first is training loss, which is what the network optimizes, as defined in @sec:training. We expect this variable to decrease more or less monotonically while training, because the network is descending it's gradient. The second variable is validation loss, which is the same function a training loss, but on the separate validation data set. This allows us to tell whether the network is still learning useful information or starting to overfit. In general, we expect this to be about the same as the training loss, possibly a bit higher. If the training loss is still falling but validation loss is starting to increase again, the network is overfitting on the training data.
+
+ The third variable is the validation error, which we define as $$1 - {\sum_{s \in S}\{1 \text{ if prediction}(s) = \text{truth}(s)\text{ else }0\} \over |S|},$$ where $S$ is all the frames for all the samples in the validation data set, and $\text{prediction}(s) = \text{argmax}{\text{output}}$. This means we take the network output, convert it into the category the network is currently most confident in, and compare it with the ground truth. For example, say we are training with two outputs, one for "Non BC" and one for "BC". The network will always give us two values between 0 and 1 that add up to one because of the softmax function as described in @sec:training. If the network output is [0.7, 0.3] for a specific sample we interpret it as "Non BC", because the confidence in the "Non BC" category is higher. If the ground truth for this sample is also "Non BC", the validation error is 0, otherwise 1.
+ This gives us a statistical rating of the current state of the predictor that has less resolution than the loss function (because it throws away the "confidence" of the network), but is closer to our interpretation of the network output when evaluating. We use this value as an initial comparison between predictors and to decide which epoch of the network gives will probably give the best results.
 
 We started with a simple model with a configuration of pitch and power as input and 800 ms of context, giving us $80\cdot 2 = 160$ input dimensions, hidden layers of 100 $\rightarrow$ 50 feed forward neurons. We trained this using many different gradient descent methods such as stochastic gradient descent (SGD), SGD with momentum, Nesterov momentum, Adadelta and Adam, each with fixed learning rates to start. The momentum methods add a speed variable to the descent. This can be interpreted similar to its physical name giver. Imagine a ball rolling down a mountain slope. For each time period, it keeps it's previous momentum and is thus able to jump over small dents in the ground (local minima). In our case, momentum worsened the results, so we stayed with SGD and Adadelta. 
 
@@ -422,78 +426,115 @@ For this we define the predicate `is_listening` (is only emitting
 utterances that are backchannels or silence) and `is_talking`
 (`= not is_listening`). A monologuing segment is the maximum possible
 time range in which one person is consistently talking and the other
-only listening. Additionally, we only consider such segments of a
-minimum length of 5 seconds to reduce problems arising from predictions
-at the edges of the segments, though this only improved the resulting
-F1-scores by 2%.
+only listening. We only consider segments of a minimum length of five seconds to exclude sections of alternating conversation.
+The results did not significantly change when adjusting this minimum length between two and ten seconds.
+
+An interesting aspect is that in our tests the predictors had difficulty distinguishing segments of speech that indicate a backchannel and those that indicate a speaker change. Subjectively, this makes sense because in many cases a backchannel can be seen as a replacement for starting to talk more extensively.
 
 # Results
 
-All the results in \autoref{fig:survey} use the following configuration
-if not otherwise stated: LSTM, Hidden layers: 70 $\rightarrow$ 35
-neurons, Input features: Power, pitch, FFV, Context frame stride: 2,
-Margin of Error: 0ms to +1000ms. Precision, Recall and F1-Score are
-given for the validation data set. In \autoref{fig:final}, our final
-results are given for the completely independent evaluation data set.
+We use "$70 : 35$" to denote a network layer configuration of $\text{input} \rightarrow 70\text{ neurons} \rightarrow 35\text{ neurons} \rightarrow \text{output}$.
+All results in \autoref{fig:survey} use the following setup if not otherwise stated: LSTM, configuration: $(70 : 35)$, input features: power, pitch, FFV, context frame stride: 2, margin of error: 0\,ms to +1000\,ms. Precision, recall and F1-Score are given for the validation data set.
+
+
+We tested different context widths. A context width of $n\,\si{ms}$ means we use the range $[-n\,\si{ms},\allowbreak 0\,\si{ms}]$ from the beginning of the backchannel utterance. The results improved significantly when increasing the context width from our initial value of 500\,ms. Performance peaked with a context of about 1500\,ms, as can be seen in Figure \ref{varycontext}. Longer contexts tended to cause the predictor to trigger too late.
+
+
+We tested using only every n-th frame of input data. Even though we initially did this for performance reasons, we noticed that training on every single frame has worse performance than skipping every second frame due to overfitting. Taking every fourth frame seems to miss too much information, so performance peaks at a context stride of 2, as can be seen in Figure \ref{varystrides}.
+
+We tested different combinations of features. Using FFV as the only prosodic feature performs worse than FFV together with the absolute pitch value. Adding MFCCs does not seem to improve performance in a meaningful way when also using pitch. See Figure \ref{varyfeatures} for more information. Note that using \emph{only} word2vec performs reasonably well, because with our method it indirectly encodes the time since the last utterance.
+
+Figure \ref{varylstm} shows a comparison between feed forward and LSTM networks. The parameter count is the number of connection weights the network learns in training. Note that LSTMs have significantly higher performance, even with similar parameter counts.
+
+We compared different layer sizes for our LSTM networks, as shown in Figure \ref{varylayers}. A network depth of two hidden layers worked best, but the results are adequate with a single hidden layer or three hidden layers.
+
+In \autoref{fig:final}, our final results are given for the completely independent evaluation data set. We compared the results by Mueller et al. (2015) \cite{mueller} with our system. They used the same dataset, but focused on offline predictions, meaning their network had future information available, and they evaluated their performance on the whole corpus including segments with silence and with alternating conversation. We adjusted our baseline and evaluation system to match their setup. As can be seen in Figure \ref{fig:mueller}, our predictor performs significantly better.
+All other related research used different languages, datasets or evaluation methods, making a direct comparison meaningless.
+
+Figure \ref{fig:ourbest} shows the results with our own evaluation method. We provide values for different margins of error used in other research. Subjectively, missing a BC trigger may be more acceptable than a false positive, so we also provide a result with a balanced precision and recall. 
 
 
 \begin{figure}
 \caption{Results on the Validation Set}\label{fig:survey}
-\subfloat[Results with various context lengths]{
-    \begin{tabular}{|c|c|c|c|}\hline
+\centering
+\subfloat[Results with various context lengths. Performance peaks at 1500\,ms.]{
+    \begin{tabular}{cccc}
+    \hline\noalign{\smallskip}
     Context & Precision & Recall & F1-Score \\
-    \svhline
-    500ms & 0.219 & 0.466 & 0.298 \\
-    1000ms & 0.280 & 0.497 & 0.358 \\
-    \emph{1500ms} & 0.305 & 0.488 & \bf{0.375} \\
-    2000ms & 0.275 & 0.577 & 0.373 \\
-    \hline\end{tabular}
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+    500\,ms & 0.219 & 0.466 & 0.298 \\
+    1000\,ms & 0.280 & 0.497 & 0.358 \\
+    1500\,ms & 0.305 & 0.488 & \bf{0.375} \\
+    2000\,ms & 0.275 & 0.577 & 0.373 \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \label{varycontext}
 }
-\subfloat[Results with various network configurations]{
-    \begin{tabular}{|c|c|c|c|}\hline
-    Layers & Precision & Recall & F1-Score \\
-    \svhline
-    $in \rightarrow 100 \rightarrow out$ & 0.280 & 0.542 & 0.369 \\
-    $in \rightarrow 50 \rightarrow 20 \rightarrow out$ & 0.291 & 0.506 & 0.370 \\
-    $in \rightarrow 70 \rightarrow 35\rightarrow out$ & 0.305 & 0.488 & \bf{0.375} \\
-    $in \rightarrow 100 \rightarrow 50 \rightarrow out$ & 0.303 & 0.473 & 0.369 \\
-    $in \rightarrow 70 \rightarrow 50 \rightarrow 35 \rightarrow out$ & 0.278 & 0.541 & 0.367 \\
-    \hline\end{tabular}
+\qquad
+\subfloat[Results with various context frame strides]{
+    \begin{tabular}{cccc}
+    \hline\noalign{\smallskip}
+    Stride & Precision & Recall & F1-Score \\
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+    1 & 0.290 & 0.490 & 0.364 \\
+    2 & 0.305 & 0.488 & \bf{0.375} \\
+    4 & 0.285 & 0.498 & 0.363 \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \label{varystrides}
 }
 
-\subfloat[Results with various input features.]{
-    \begin{tabular}{|c|c|c|c|}\hline
+\centering
+\subfloat[Results with various input features, separated into only acoustic features and acoustic plus linguistic features.]{
+    \begin{tabular}{lccc}
+    \hline\noalign{\smallskip}
     Features & Precision & Recall & F1-Score \\
-    \svhline
-    power, ffv & 0.259 & 0.513 & 0.344 \\
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
     power, pitch & 0.307 & 0.435 & 0.360 \\
     power, pitch, mfcc & 0.278 & 0.514 & 0.360 \\
+    power, ffv & 0.259 & 0.513 & 0.344 \\
     power, ffv, mfcc & 0.279 & 0.515 & 0.362 \\
-    power, pitch, word2vec$_{dim=5}$ & 0.304 & 0.474 & 0.370 \\
-    power, pitch, ffv, word2vec$_{dim=5}$ & 0.297 & 0.501 & 0.373 \\
-    power, pitch, ffv & 0.305 & 0.488 & 0.375 \\
-    power, pitch, word2vec$_{dim=10}$ & 0.316 & 0.479 & \bf{0.381} \\
-    \hline\end{tabular}
-}
-\subfloat[Results with various context frame strides]{
-    \begin{tabular}{|c|c|c|c|}\hline
-    Stride & Precision & Recall & F1-Score \\
-    \svhline
-    1 & 0.290 & 0.490 & 0.364 \\
-    \emph{2} & 0.305 & 0.488 & \bf{0.375} \\
-    4 & 0.285 & 0.498 & 0.363 \\
-    \hline\end{tabular}
+    power, pitch, ffv & 0.305 & 0.488 & \bf{0.375} \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    word2vec$_{dim=30}$ & 0.244 & 0.478 & 0.323 \\
+    power, pitch, word2vec$_{dim=30}$ & 0.318 & 0.486 & 0.385 \\
+    power, pitch, ffv, word2vec$_{dim=15}$ & 0.321 & 0.475 & 0.383 \\
+    power, pitch, ffv, word2vec$_{dim=30}$ & 0.322 & 0.497 & \bf{0.390} \\
+    power, pitch, ffv, word2vec$_{dim=50}$ & 0.304 & 0.527 & 0.385 \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \label{varyfeatures}
 }
 
+
 \subfloat[Feed forward vs LSTM]{
-    \begin{tabular}{|c|c|c|c|}\hline
-    Layers & Precision & Recall & F1-Score \\
-    \svhline
-    Feed Forward ($in \rightarrow 100 \rightarrow 50 \rightarrow out$) & 0.242 & 0.490 & 0.324 \\
-    Feed Forward ($in \rightarrow 70 \rightarrow 35 \rightarrow out$) & 0.251 & 0.468 & 0.327 \\
-    LSTM ($in \rightarrow 70 \rightarrow 35 \rightarrow out$) & 0.305 & 0.488 & \bf{0.375} \\
-    \hline\end{tabular}
+    \begin{tabular}{ccccc}
+    \hline\noalign{\smallskip}
+    Layers & Parameters & Precision & Recall & F1-Score \\
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+    FF ($56 : 28$) & 40k & 0.230 & 0.549 & 0.325 \\
+    FF ($70 : 35$) & 50k & 0.251 & 0.468 & 0.327 \\
+    FF ($100 : 50$) & 72k & 0.242 & 0.490 & 0.324 \\
+    LSTM ($70 : 35$) & 38k & 0.305 & 0.488 & \bf{0.375} \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \label{varylstm}
 }
+\subfloat[Comparison of different network configurations. Two LSTM layers give the best results.]{
+    \begin{tabular}{cccc}
+    \hline\noalign{\smallskip}
+    Layers & Precision & Recall & F1-Score \\
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+    $100$ & 0.280 & 0.542 & 0.369 \\
+    $50 : 20$ & 0.291 & 0.506 & 0.370 \\
+    $70 : 35$ & 0.305 & 0.488 & \bf{0.375} \\
+    $100 : 50$ & 0.303 & 0.473 & 0.369 \\
+    $70 : 50 : 35$ & 0.278 & 0.541 & 0.367 \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \label{varylayers}
+}
+
 
 \end{figure}
 
@@ -505,33 +546,55 @@ results are given for the completely independent evaluation data set.
 \begin{figure}
 \centering
 \caption{Final best results on the evaluation set (chosen by validation set)}\label{fig:final}
+
+
 \csubfloat[Comparison with previous research. Mueller et al. did their evaluation without the constraints defined in \autoref{eval-1}, so we adjusted our baseline and evaluation to match their setup]{
-    \begin{tabular}{|c|c|c|c|}\hline
+    \begin{tabular}{lccc}
+    \hline\noalign{\smallskip}
         Predictor & Precision & Recall & F1-Score \\
-        \svhline
+        \noalign{\smallskip}\svhline\noalign{\smallskip}
         Baseline (random) & 0.0417 & 0.0417 & 0.0417 \\
         Müller et al. (offline) \cite{mueller} & -- & -- & 0.109 \\
-        Our results (online) & 0.0929 & 0.378 & \bf{0.149} \\
-    \hline\end{tabular}
+        Our results (offline, context of \SIrange{-750}{750}{ms}) & 0.114 & 0.300 & \bf{0.165} \\
+        Our results (online, context of \SIrange{-1500}{0}{ms}) & 0.100 & 0.318 & 0.153 \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \label{fig:mueller}
 }
 
-\csubfloat[Results with various margins of error used in other research \cite{survey}]{
-    \begin{tabular}{|c|l|c|c|c|}\hline
+\csubfloat[Results with our evaluation method with various margins of error used in other research \cite{survey}. Performance improves with a wider margin width and with a later margin center.]{
+    \begin{tabular}{clccc}
+    \hline\noalign{\smallskip}
         Margin of Error & Constraint & Precision & Recall & F1-Score \\
-        \svhline
-        \SIrange{-200}{+200}{ms} && 0.163 & 0.348 & 0.222 \\
-        \SIrange{-100}{+500}{ms} && 0.225 & 0.414 & 0.291 \\
+        \noalign{\smallskip}\svhline\noalign{\smallskip}
+        \SIrange{-200}{+200}{ms} && 0.172 & 0.377 & 0.237 \\
+        \SIrange{-100}{+500}{ms} &&	0.239 & 0.406 & 0.301 \\
         \SIrange{-500}{+500}{ms} && 0.247 & 0.536 & 0.339 \\
-        \hline
-        \SIrange{0}{+1000}{ms} & \parbox[t]{4cm}{Baseline (correct BC count at random times)} & 0.111 & 0.0521 & 0.0708 \\
-         & Balanced Precision and Recall & \bf{0.331} & 0.329 & 0.330 \\ % lstm-best-layers-100
-         & Best F1-Score (only prosodic features) & 0.294 & 0.488 & \bf{0.367} \\
-         & Best F1-Score (including word2vec) & 0.300 & 0.473 & \bf{0.367} \\
-    \hline\end{tabular}
+    \hline\noalign{\smallskip}
+        \SIrange{0}{+1000}{ms} & Baseline (random) & 0.111 & 0.0521 & 0.0708 \\
+         & Balanced Precision and Recall & 0.342 & 0.339 & 0.341 \\
+         & Best F1-Score (only acoustic features) & 0.294 & 0.488 & 0.367 \\
+         & Best F1-Score (acoustic and linguistic features) & 0.308 & 0.497 & \bf{0.380} \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \label{fig:ourbest}
 }
-\end{figure}
-\section{Conclusion}
 
-# Conclusion
+\end{figure}
+
+
+# Conclusion and Future Work
+
+We have presented...(paper umschreiben)
+
+
+We only scraped the surface of adding linguistic features via word2vec because it assumes the availability of an instant speech recognizer. Further work is needed to evaluate other methods for adding word vectors to the input features and to analyse problems with our approach.
+We only tested feed forward neural networks and LSTMs, other architectures like convolutional neural networks may also give interesting results.
+Our approach of choosing the training areas may not be optimal because the delay between the last utterance of the speaker and the backchannel can vary significantly. A possibility would be to align the training area by the last speaker utterance instead of the backchannel start. Our initial tests of predicting multiple separate categories of BCs did not produce any notable results, further work is needed to analyse whether more context or features are needed to facilitate this. 
+
+Because backchannels are a largely subjective phenomenon, a user study would be helpful to subjectively evaluate the performance of our predictor and to compare it with human performance in our chosen evaluation method. Another method would be to find consensus for backchannel triggers by combining the predictions of multiple human subjects for a single speaker channel as described by Huang et al. (2010) as "parasocial consensus sampling" \cite{huang2010learning}.
+
+An interesting extension for use in Virtual Assistants would be to also predict speaker changes in addition to backchannels. Our current model already often predicts a backchannel at a time where the speaker stops talking and expects a longer response. Our current model of predicting [No BC, BC] could be extended to predict [No BC, BC, Speaker Change]. This would allow a virtual assistant to give natural sounding backchannel responses and detect when it is supposed to start answering the query.
+
 
 # Bibliography
