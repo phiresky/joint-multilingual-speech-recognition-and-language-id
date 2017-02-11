@@ -90,7 +90,7 @@ Collection:
 # Backchannel Prediction {#sec:extraction}
 
 A listener backchannel is generally defined as any kind of feedback a listener
-gives a speaker as an acknowledgment in a primarily one-way conversation.
+gives a speaker as an acknowledgment in a segment of conversation that is primarily one-way.
 They include but are not limited to nodding [@watanabe_voice_1989-1], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport , which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
 
 (-> motivation)
@@ -137,11 +137,6 @@ The first feature is the fundamental frequency variation spectrum (FFV) [@laskow
 Other features we tried include the Mel-frequency cepstral coefficients (MFCC) with 20 dimensions \[ref\] and a set of
 bottleneck features trained on phoneme recognition using a feed forward network, which is used for speech recognition at the Interactive Systems Lab \[ref\].
 
-Because our training data set is limited, we easily run into overfitting problems
-with a large input feature dimension.
-
-All of the features are extracted with a window size of 32 milliseconds, overlapping each other with a stride of 10 milliseconds. This gives us 100 frames per second.
-
 ## Training and Neural Network Design {#sec:training}
 
 We begin with a simple feed forward network. The input layer consists of
@@ -184,7 +179,7 @@ An example of this postprocessing procedure can be seen in @fig:postproc.
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth]{img/postprocessing.png}
+    \includegraphics[width=\textwidth]{img/postprocessing.pdf}
     \caption{Postprocessing example}
     \label{fig:postproc}
 \end{figure}
@@ -348,11 +343,13 @@ words (2.21%).
 
 #### Acoustic features
 
-We used the Janus Recognition Toolkit [@janus] for parts
-of the feature extraction (power, pitch tracking, FFV, MFCC).
-These features are extracted for 32ms frame windows, with a shift of 10ms. A sample of the pitch and power features can be seen in @fig:pitchpow.
+We used the Janus Recognition Toolkit [@janus] for the acoustic feature extraction (power, pitch tracking, FFV, MFCC).
 
-![Audio samples, transcription, pitch and power for a single audio channel. Note that the pitch value is only meaningful when the person is speaking.](img/20170208184917.png){#fig:pitchpow}
+These features are extracted for 32ms frame windows, with a frame shift of 10ms. This gives us 100 frames per feature per second.
+
+A sample of the pitch and power features can be seen in @fig:pitchpow.
+
+![From top to bottom: Audio samples, transcription, pitch and power for a single audio channel. Note that the pitch value is only meaningful when the person is speaking.](img/20170208184917.png){#fig:pitchpow}
 
 
 #### Linguistic features
@@ -424,10 +421,12 @@ talking, we only run our evaluation on monologuing segments.
 
 For this we define the predicate `is_listening` (is only emitting
 utterances that are backchannels or silence) and `is_talking`
-(`= not is_listening`). A monologuing segment is the maximum possible
+(`= not is_listening`). An example of this can be seen in @fig:listening. A monologuing segment is the maximum possible
 time range in which one person is consistently talking and the other
 only listening. We only consider segments of a minimum length of five seconds to exclude sections of alternating conversation.
 The results did not significantly change when adjusting this minimum length between two and ten seconds.
+
+![A short audio segment showing talking and listening areas. Note that a backchannel from Speaker B in the middle ("yeah") does not classify that area as speaking. At the end both people talk at the same time, so speaker B needs to repeat herself.](img/20170211153622.png){#fig:listening}
 
 An interesting aspect is that in our tests the predictors had difficulty distinguishing segments of speech that indicate a backchannel and those that indicate a speaker change. Subjectively, this makes sense because in many cases a backchannel can be seen as a replacement for starting to talk more extensively.
 
@@ -581,6 +580,46 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
 }
 
 \end{figure}
+
+# Technical Details
+
+We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results.
+
+## Extraction
+
+We used the Python interface of the Janus Recognition Toolkit 
+
+## Web Visualizer
+
+### Description
+
+The web visualizer is an interactive tool to display time-based data. It can display audio files as waveforms like other popular audio editing software. It can also show arbitrary data that has one or more dimensions per time frame of arbitrary length. We use this to show the features we extract from the audio and use for training of the neural networks, as well as the resulting network outputs. It can show these either as a line graph as seen in @fig:postproc or as a grayscale color value, as seen in @fig:grayscale.
+
+![The output of a neural network trying to predict backchannel categories for a audio segment. The first category is "No Backchannel", so it is roughly inverse to the other categories (neutral, question, surprised, affirmative, positive). From top to bottom: Audio, Text, Raw NN output, Smoothed NN output. White means higher probabilities, black means lower probabilities.](img/20170211151523.png){#fig:grayscale}
+
+In addition, it can also show time-aligned textual labels either as seperate features or as overlays over the other data. We use this to display the transcriptions below the audio, and to highlight ranges of audio, for example which areas we use as positive and negative prediction areas, or which areas we interpret as "talking" or "listening" as can be seen in @fig:listening. This allows us to quickly check if the chosen prediction areas make general sense.
+
+The user can choose a specific or random conversation from the training, validation or evaluation data set. Then they can choose to view and combination of the available features from a categorical tree [@fig:categories]. The user can zoom into any section of the data and play the audio, the UI will follow the current playback position.
+
+\begin{wrapfigure}{R}{0.3\textwidth}
+\centering
+\includegraphics{img/20170211154422.png}
+\caption{Selecting a feature to display in the Web Visualizer.\label{fig:categories}}
+\end{wrapfigure}
+
+The user can also save the extact current GUI state including zoom and playback position to generate a unique URL that will restore the visualizer to that state when loaded.
+
+Some presets are also available, such as the default view which will show both channels of a conversation, together with the transcriptions, power, pitch and highlights for the training areas. Another meta preset is the NN output view, which includes a single audio channel and the raw output, smoothed output and resulting audio track for a trained network, as seen for example in @fig:postproc. The exact configuration can be chosen in a form [@fig:loadingnn]. Newly trained networks will automatically be available when the training is finished.
+
+![Loading the output of the best epoch of specific network for channel A of the current conversation](img/20170211161913.png){#fig:loadingnn width=70%}
+
+
+### Implementation
+
+The visualizer is split into two parts, the server side (backend) and the client side (frontend). The server is written in python. It accepts connections via Websockets. It sends a list of available conversation IDs and corresponding features. The client can then select a conversation and dynamically load any combination of the available features, which the server will evaluate on demand while caching the most recently used features. The backend is in a shared code base with the extraction code, so it uses parts of the same code we also use for training and evaluation. The client is written in TypeScript with Mobx+React.
+
+
+
 
 
 # Conclusion and Future Work
