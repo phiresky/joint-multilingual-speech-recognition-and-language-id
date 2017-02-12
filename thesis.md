@@ -469,7 +469,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
     \end{tabular}
     \label{varycontext}
 }
-\qquad
+
 \subfloat[Results with various context frame strides]{
     \begin{tabular}{cccc}
     \hline\noalign{\smallskip}
@@ -519,6 +519,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
     \end{tabular}
     \label{varylstm}
 }
+
 \subfloat[Comparison of different network configurations. Two LSTM layers give the best results.]{
     \begin{tabular}{cccc}
     \hline\noalign{\smallskip}
@@ -585,10 +586,6 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
 
 We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results.
 
-## Extraction
-
-We used the Python interface of the Janus Recognition Toolkit 
-
 ## Web Visualizer
 
 ### Description
@@ -616,11 +613,28 @@ Some presets are also available, such as the default view which will show both c
 
 ### Implementation
 
-The visualizer is split into two parts, the server side (backend) and the client side (frontend). The server is written in python. It accepts connections via Websockets. It sends a list of available conversation IDs and corresponding features. The client can then select a conversation and dynamically load any combination of the available features, which the server will evaluate on demand while caching the most recently used features. The backend is in a shared code base with the extraction code, so it uses parts of the same code we also use for training and evaluation. The client is written in TypeScript with Mobx+React.
+The visualizer is split into two parts, the server side (backend) and the client side (frontend). The server is written in python. It accepts connections via Websockets. It sends a list of available conversation IDs and corresponding features. The client can then select a conversation and dynamically load any combination of the available features, which the server will evaluate on demand while caching the most recently used features. The backend is in a shared code base with the extraction code, so it uses parts of the same code we also use for training and evaluation. The client is written in TypeScript with MobX and React.
 
 
 
+## Extraction and Learning
 
+We wrote our own parsing toolkit for the transcriptions and word alignments from the SwDA [@swda].
+We used the Python interface of the Janus Recognition Toolkit, numpy, scipy and sklearn for feature extraction and filters. We implemented a small learning toolkit on top of Lasagne that reads the extraction and training configuration from a JSON file and outputs the training history as JSON. We used git to track the changes and git tags so every extraction and training output had the exact state of the code attached. This allowed us to easily reproduce different outputs. We also wrote a meta configuration generator, that takes a set of interesting configuration parameters and outputs all the relevant permutations, which can then be extracted, trained and evaluated in parallel.
+
+Many of the methods for extraction were written as pure functions, which allowed us to create a transparent caching system as a function decorator that automatically caches the result of expensive functions on disk. This way, we do not need to explicitly seperate the extraction from training and write data files, we can simply run the training and the extraction only runs when the extraction parameters (features / context size) changes. We also used joblib, a python library for easy parallelization, to enable the extraction and evaluation processes to use all available CPU cores.
+
+## Evaluation Visualizer
+
+The evaluation visualizer reads all the output JSON files from training and displays the resulting loss graphs as seen in @fig:l2reg. It also shows a table of the evaluation results with various parameters for a every neural network sorted from best validation result to worst [@fig:fullsingle]. There is also a graph for detailed comparison of the postprocessing and evaluation methods, as shown in @fig:varysigma, @fig:varycenter, and @fig:varymonologuing.
+
+![Full overview over a single training result, showing the loss graph for checking for overfitting issues and the evaluation results.](img/20170212134323.png){#fig:fullsingle}
+
+![Precision, Recall and F1-Score depending on the smoothing sigma used. The F1-Score peaks at $\sigma=350\,ms$, Precision peaks at $\sigma=525\,ms$. With lower sigmas, the predictor triggers more often causing the recall to rise](img/20170212003936.png){#fig:varysigma}
+
+![Precision, Recall and F1-Score depending on the margin of error center, showing a very clear normal distribution. The center of this distribution depends on the filter sigma and cutoff, meaning we can optimize it depending on the evaluation method.](img/20170212134705.png){#fig:varycenter}
+
+![Precision, Recall and F1-Score depending on the minimum monologuing segment length. -1 means we evaluate on all data, including silence.](img/20170212132651.png){#fig:varymonologuing}
 
 # Conclusion and Future Work
 
