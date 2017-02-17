@@ -123,7 +123,7 @@ The first feature is the fundamental frequency variation spectrum (FFV) [@laskow
 Other features we tried include the Mel-frequency cepstral coefficients (MFCC) with 20 dimensions \[ref\] and a set of
 bottleneck features trained on phoneme recognition using a feed forward neural network, which is used for speech recognition at the Interactive Systems Lab.
 
-## Training area selection
+## Training area selection {#sec:selection}
 
 We generally assume to have two separate but synchronized audio tracks, one for the speaker and one for the listener, each with the corresponding transcriptions.
 We need to choose which areas of audio we use to train the network. We
@@ -259,56 +259,63 @@ decide which utterances to classify as backchannels. The SwDA contains
 categorical annotations for utterances for about half of the data of the
 Switchboard corpus. An excerpt of the most common categories can be seen in @tbl:swda.
 
-\begin{longtable}{lp{3cm}lp{4cm}ll}
-\caption{Most common categories from the SwDA Corpus}\label{tbl:swda}\tabularnewline
-\toprule
-~ & name & act\_tag & example & train\_count &
-full\_count\tabularnewline
-\midrule
-\endhead
-1 & Statement-non-opinion & sd & Me, I'm in the legal department. &
-72824 & 75145\tabularnewline
-2 & Acknowledge (Backchannel) & b & Uh-huh. & 37096 &
-38298\tabularnewline
-3 & Statement-opinion & sv & I think it's great & 25197 &
-26428\tabularnewline
-4 & Agree/Accept & aa & That's exactly it. & 10820 &
-11133\tabularnewline
-5 & Abandoned or Turn-Exit & \% & So, - & 10569 & 15550\tabularnewline
-6 & Appreciation & ba & I can imagine. & 4633 & 4765\tabularnewline
-7 & Yes-No-Question & qy & Do you have to have any special training? &
-4624 & 4727\tabularnewline
-\bottomrule
-\end{longtable}
+\begin{figure}
+\centering
+\caption{Most common categories from the SwDA Corpus}
+\begin{tabular}{cp{3cm}cp{4cm}r}
+
+    \hline\noalign{\smallskip}
+
+    ~ & name & act\_tag & example & full\_count \\
+
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+
+    1 & Statement-non-opinion & sd & Me, I'm in the legal department. &  75145\tabularnewline
+    2 & Acknowledge (Backchannel) & b & Uh-huh. &  38298\tabularnewline
+    3 & Statement-opinion & sv & I think it's great &  26428\tabularnewline
+    4 & Agree/Accept & aa & That's exactly it. &  11133\tabularnewline
+    5 & Abandoned or Turn-Exit & \% & So, - &  15550\tabularnewline
+    6 & Appreciation & ba & I can imagine. &  4765\tabularnewline
+    7 & Yes-No-Question & qy & Do you have to have any special training? &  4727\tabularnewline
+
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \label{tbl:swda}
+\end{figure}
 
 We extracted all utterances containing one of the tags beginning with "b" (which stands for backchannels or backchannel-like utterances), and counted their frequency. Because the dataset also marks some longer utterances as backchannels, we only use those that are at most three words long to exclude those that transmit a lot of additional information to the speaker.
 
 We chose to use the top 150 unique utterances from this set. For the most common ones, see @tbl:bcs.
 
-
- | aggregated | self | count | category | text
- |------------|------|-------|----------|------
- | 31.92% | 31.92% | 14319 | b | uh-huh
- | 61.08% | 29.15% | 13075 | b | yeah
- | 68.95% | 7.87% | 3532 | b | right
- | 71.73% | 2.78% | 1249 | b | oh
- | 73.69% | 1.96% | 877 | b | [silence]
- | 75.09% | 1.40% | 629 | b | oh yeah
- | 76.49% | 1.40% | 627 | b | yes
- | 77.84% | 1.35% | 607 | b | okay
- | 78.86% | 1.02% | 458 | bk | okay
- | 79.75% | 0.89% | 399 | b | huh
- | 80.57% | 0.81% | 364 | b | sure
- | 81.29% | 0.72% | 325 | bk | oh okay
- | 81.93% | 0.64% | 288 | b | huh-uh
- | 82.56% | 0.63% | 282 | bh | oh really
- | 83.15% | 0.59% | 264 | ba | wow
- | 83.73% | 0.58% | 259 | b | um
- | 84.16% | 0.43% | 193 | bh | really
- | 84.57% | 0.41% | 186 | b | really
- | 84.97% | 0.39% | 177 | bk | oh
-
-: Most common backchannel utterances in the SwDA dataset {#tbl:bcs}
+\begin{figure}
+\centering
+\caption{Most common backchannel utterances in the SwDA dataset}
+    \begin{tabular}{rrrll}
+    \hline\noalign{\smallskip}
+    aggregated & self & count & category & text \\
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+    31.92\% & 31.92\% & 14319 & b & uh-huh \\
+    61.08\% & 29.15\% & 13075 & b & yeah \\
+    68.95\% & 7.87\% & 3532 & b & right \\
+    71.73\% & 2.78\% & 1249 & b & oh \\
+    73.69\% & 1.96\% & 877 & b & [silence] \\
+    75.09\% & 1.40\% & 629 & b & oh yeah \\
+    76.49\% & 1.40\% & 627 & b & yes \\
+    77.84\% & 1.35\% & 607 & b & okay \\
+    78.86\% & 1.02\% & 458 & bk & okay \\
+    79.75\% & 0.89\% & 399 & b & huh \\
+    80.57\% & 0.81\% & 364 & b & sure \\
+    81.29\% & 0.72\% & 325 & bk & oh okay \\
+    81.93\% & 0.64\% & 288 & b & huh-uh \\
+    82.56\% & 0.63\% & 282 & bh & oh really \\
+    83.15\% & 0.59\% & 264 & ba & wow \\
+    83.73\% & 0.58\% & 259 & b & um \\
+    84.16\% & 0.43\% & 193 & bh & really \\
+    84.57\% & 0.41\% & 186 & b & really \\
+    84.97\% & 0.39\% & 177 & bk & oh \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}\label{tbl:bcs}
+\end{figure}
 
 
 The SwDA is incomplete, it only contains labels for about half of the Switchboard dataset. Because we wanted to use as much training data as possible, we had to identify
@@ -428,6 +435,42 @@ results, as can be seen in the example in @fig:l2reg.
 
 ![The same LSTM network trained without (left) and with (right) L2-Regularization. Note that without regularization the network starts overfitting after two epochs. With regularization training and validation loss mostly stay the same with regularization, and the validation error continues to improve. Training loss is blue, validation loss is red and validation error is orange.](img/20170209000001.png){#fig:l2reg}
 
+### Multicategorical data
+
+Everything above assumes we only predict two categories: Non-BC and BC. To extend this to multiple categories, we can use the same output layer setup with more dimensions, because softmax works for any number of categories. 
+
+We manually separated the the data into the categories neutral, question, surprise/negative, affirmative, positive. This gives us six outputs including the Non-BC output, with the distribution shown in @tbl:catcounts.
+
+\begin{figure}
+\centering
+\caption{Number of instances in the training data set per category}\label{tbl:catcounts}
+    \begin{tabular}{cc}
+    \hline\noalign{\smallskip}
+    Category & sample count \\
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+    NBC &  50809 \\
+    affirmative & 2052 \\
+    neutral & 41153 \\
+    positive & 3264 \\
+    question & 1200 \\
+    surprise/negative & 3140 \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+\end{figure}
+
+To decide whether to trigger we first check if $(1-\text{output}_{NBC}(t))$ is larger than a threshold, where NBC is the output for the category indicating no backchannel should happen. Then we use argmax(output(t)) to decide which backchannel category was predicted.
+
+With this method, the number of training samples for the categories vary, and the NBC category has as many samples as the other categories together. To balance this data, we can weigh the gradient update for each training sample by $w(sample) = max(counts) / counts(category(sample))$, where $counts(category)$ is the total number of training samples for a specific category. This means that the training samples with categories that have few samples are more important for training than the more common categories.
+
+For training, the simplest method is to just train the whole network on the ground truth for the categories. But because the data is limited, this might not give the best results. Another method is to first train the network on just NBC and BC, then fixing all the layers except the output layer and just fine-tuning the output layer to output multiple categories.
+
+The results for a network trained on a binary output with the last layer finetuned on multicategorical output can be seen in @fig:grayscale.
+
+![The output of a neural network trying to predict backchannel categories for a audio segment. The first category is "No Backchannel", so it is roughly inverse to the other categories (neutral, question, surprised, positive, affirmative). From top to bottom: Audio, Text, Raw NN output, Smoothed NN output. White means higher probabilities, black means lower probabilities.](img/20170211151523.png){#fig:grayscale}
+
+For evaluation, we printed out the confusion matrix.
+
+Even though the dataset was balanced, in evaluation the network still tended to be biased towards some categories.
 
 
 ## Evaluation {#eval-1}
@@ -448,6 +491,8 @@ The results did not significantly change when adjusting this minimum length betw
 An interesting aspect is that in our tests the predictors had difficulty distinguishing segments of speech that indicate a backchannel and those that indicate a turn taking (speaker change). Subjectively, this makes sense because in many cases a backchannel can be seen as a replacement for starting to talk more extensively.
 
 # Results
+
+## Binary output
 
 We use "$70 : 35$" to denote a network layer configuration of $\text{input} \rightarrow 70\text{ neurons} \rightarrow 35\text{ neurons} \rightarrow \text{output}$.
 All results in \autoref{fig:survey} use the following setup if not otherwise stated: LSTM, configuration: $(70 : 35)$, input features: power, pitch, FFV, context frame stride: 2, margin of error: 0\,ms to +1000\,ms. Precision, recall and F1-Score are given for the validation data set.
@@ -599,6 +644,10 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
 
 \end{figure}
 
+## Multicategorical output
+
+We evaluate the results for multicategorical output using confusion matrices. A confusion matrix shows how many samples that should be categorized as one category are categorized as another category for every combination of categories.
+
 # Technical Details
 
 We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results.
@@ -608,8 +657,6 @@ We implemented multiple software components to help us understand the data, extr
 ### Description
 
 The web visualizer is an interactive tool to display time-based data. It can display audio files as waveforms similar to other popular audio editing software. It can also show arbitrary data that has one or more dimensions per time frame of arbitrary length. We use this to show the features we extract from the audio and use for training of the neural networks, as well as the resulting network outputs. It can show these either as a line graph as seen in @fig:postproc or as a grayscale color value, as seen in @fig:grayscale.
-
-![The output of a neural network trying to predict backchannel categories for a audio segment. The first category is "No Backchannel", so it is roughly inverse to the other categories (neutral, question, surprised, affirmative, positive). From top to bottom: Audio, Text, Raw NN output, Smoothed NN output. White means higher probabilities, black means lower probabilities.](img/20170211151523.png){#fig:grayscale}
 
 In addition, it can also show time-aligned textual labels either as seperate features or as overlays over the other data. We use this to display the transcriptions below the audio, and to highlight ranges of audio, for example which areas we use as positive and negative prediction areas, or which areas we interpret as "talking" or "listening" as can be seen in @fig:listening. This allows us to quickly check if the chosen prediction areas make general sense.
 
@@ -663,7 +710,7 @@ We also used joblib, a python library for easy parallelization, to enable the ex
 The evaluation visualizer reads all the output JSON files from training and displays the resulting loss graphs as seen in @fig:l2reg. It also shows a table of the evaluation results with various parameters for a every neural network sorted from best validation result to worst [@fig:fullsingle]. There is also a graph for detailed comparison of the postprocessing and evaluation methods, as shown in @fig:varysigma, @fig:varycenter, and @fig:varymonologuing.
 This program is completely client-side and runs in the webbrowser.
 
-The UI can show multiple graphs at the same time, and also shows an overview over all the best results from every network, which can be filtered by RegExp. In addition, it can automatically generate \LaTeX tables from the shown filtered outputs for customizable columns.
+The UI can show multiple graphs at the same time, and also shows an overview over all the best results from every network, which can be filtered by RegExp. In addition, it can automatically generate \LaTeX  tables from the shown filtered outputs for customizable columns.
 
 ![Full overview over a single training result, showing the loss graph for checking for overfitting issues and the evaluation results.](img/20170212134323.png){#fig:fullsingle}
 
@@ -675,12 +722,16 @@ The UI can show multiple graphs at the same time, and also shows an overview ove
 
 # Conclusion and Future Work
 
-We have presented...(paper umschreiben)
+We have presented a novel approach to predict backchannels using acoustic and linguistic features. We experimented with different neural network designs and feature combinations to find the best method. The use of recurrent neural networks (LSTMs) greatly increased the performance of our predictions.
 
+There are some points where further improvements could be made.
+We only scraped the surface of adding linguistic features via word2vec because it assumes the availability of an instant speech recognizer. In our system we simply used the available hand-written transcripts, but in a real online environment this would need a more sophisticated approach. Further work is needed to evaluate other methods for adding word vectors to the input features and to analyse problems with our approach.
 
-We only scraped the surface of adding linguistic features via word2vec because it assumes the availability of an instant speech recognizer. Further work is needed to evaluate other methods for adding word vectors to the input features and to analyse problems with our approach.
-We only tested feed forward neural networks and LSTMs, other architectures like convolutional neural networks may also give interesting results.
-Our approach of choosing the training areas may not be optimal because the delay between the last utterance of the speaker and the backchannel can vary significantly. A possibility would be to align the training area by the last speaker utterance instead of the backchannel start. Our initial tests of predicting multiple separate categories of BCs did not produce any notable results, further work is needed to analyse whether more context or features are needed to facilitate this. 
+We only tested dense feed forward neural networks and LSTMs, other architectures like convolutional neural networks may also give interesting results. In addition, the training method we use makes the neural network unaware of the postprocessing. This means the network cannot know when it is actually producing a trigger, which means it can't know exactly when the last backchannel was. Because backchannels are unlikely to happen too close to each other, adding the time since the last trigger as a feature to the inputs may improve the results. This means we would need to decide on the exact postprocessing parameters before training, which would be incompatible with our current approach of optimizing those paramters with bayesian optimization depending on the specific outputs of the network.
+
+Our approach of choosing the training areas may not be optimal because the delay between the last utterance of the speaker and the backchannel can vary significantly. A possibility would be to align the training area by the last speaker utterance instead of the backchannel start, but this has some problems as described in @sec:selection.
+
+Our tests of predicting multiple separate categories of BCs did not produce any notable results, further work is needed to analyse whether more context or features are needed to facilitate this. 
 
 Because backchannels are a largely subjective phenomenon, a user study would be helpful to subjectively evaluate the performance of our predictor and to compare it with human performance in our chosen evaluation method. Another method would be to find consensus for backchannel triggers by combining the predictions of multiple human subjects for a single speaker channel as described by Huang et al. (2010) as "parasocial consensus sampling" \cite{huang2010learning}.
 
