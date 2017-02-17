@@ -397,33 +397,38 @@ LSTM).
 In general, we used three variables to monitor training: The first is training loss, which is what the network optimizes, as defined in @sec:training. We expect this variable to decrease more or less monotonically while training, because the network is descending it's gradient. The second variable is validation loss, which is the same function a training loss, but on the separate validation data set. This allows us to tell whether the network is still learning useful information or starting to overfit. In general, we expect this to be about the same as the training loss, possibly a bit higher. If the training loss is still falling but validation loss is starting to increase again, the network is overfitting on the training data.
 
  The third variable is the validation error, which we define as $$1 - {\sum_{s \in S}\{1 \text{ if prediction}(s) = \text{truth}(s)\text{ else }0\} \over |S|},$$ where $S$ is all the frames for all the samples in the validation data set, and $\text{prediction}(s) = \text{argmax}{\text{output}}$. This means we take the network output, convert it into the category the network is currently most confident in, and compare it with the ground truth. For example, say we are training with two outputs, one for "Non BC" and one for "BC". The network will always give us two values between 0 and 1 that add up to one because of the softmax function as described in @sec:training. If the network output is [0.7, 0.3] for a specific sample we interpret it as "Non BC", because the confidence in the "Non BC" category is higher. If the ground truth for this sample is also "Non BC", the validation error is 0, otherwise 1.
- This gives us a statistical rating of the current state of the predictor that has less resolution than the loss function (because it throws away the "confidence" of the network), but is closer to our interpretation of the network output when evaluating. We use this value as an initial comparison between predictors and to decide which epoch of the network gives will probably give the best results.
+ This gives us a statistical rating of the current state of the predictor that has less resolution than the loss function (because it throws away the "confidence" of the network), but is closer to our interpretation of the network output when evaluating. We use this value as an initial comparison between predictors and to decide which epoch of the network gives will probably give the best results. We will use a different threshold than 0.5 for evaluation, so the validation error is not a completely accurate measurement.
 
-We started with a simple model with a configuration of pitch and power as input and 800 ms of context, giving us $80\cdot 2 = 160$ input dimensions, hidden layers of 100 $\rightarrow$ 50 feed forward neurons. We trained this using many different gradient descent methods such as stochastic gradient descent (SGD), SGD with momentum, Nesterov momentum, Adadelta and Adam, each with fixed learning rates to start. The momentum methods add a speed variable to the descent. This can be interpreted similar to its physical name giver. Imagine a ball rolling down a mountain slope. For each time period, it keeps it's previous momentum and is thus able to jump over small dents in the ground (local minima). In our case, momentum worsened the results, so we stayed with SGD and Adadelta. 
+We train the network in epochs of minibatches. A minibatch is a set of $N$ training samples that we feed into the network at once and update the gradient on their average loss. This means we only update the gradient every $N$ training samples, which reduces the probability of a single huge gradient disturbing training. We used a minibatch size of $N=250$ training samples. One epoch is defined as one whole backward pass of all the training data through the network.
 
-We tried different weight initialization methods. Initializing all weights with zero gave significantly worse results than random initialization, so we stayed with the Lasagne default of Glorot uniform initialization, which uses uniformly distributed random values, with the maximum value scaled so it makes statistical sense in the layer dimensions [@glorot_understanding_2010].
+We started with a simple model with a configuration of pitch and power as input and 800 ms of context, giving us $80\cdot 2 = 160$ input dimensions, hidden layers of 100 $\rightarrow$ 50 feed forward neurons. We trained this using many different gradient descent methods such as stochastic gradient descent (SGD), SGD with momentum, Nesterov momentum, Adadelta and Adam, each with fixed learning rates to start. The momentum methods add a speed variable to the descent. This can be interpreted similar to its physical name giver. Imagine a ball rolling down a mountain slope, for each time period, it keeps it's previous momentum and is thus able to jump over small dents in the ground (local minima). In our case, momentum worsened the results, so we stayed with SGD and Adam. 
 
-We compared online and offline prediction, where offline prediction got 400 ms of past audio and 400 ms of future audio from the onset of the backchannel utterance. Offline prediction gave 18% better results, but of course we are more interested in online prediction.
+We tried different weight initialization methods. Initializing all weights with zero gave significantly worse results than random initialization, so we stayed with the Lasagne default of Glorot uniform initialization, which uses uniformly distributed random values, with the maximum value scaled so it makes statistical sense with the used layer dimension [@glorot_understanding_2010]. Another method to use would be layer-wise denoising autoencoder pretraining. With this method, the initial weights are created by training the layers individually to reproduce the input data with some dropout. The first layer is trained on its own, the second layer is trained with the first layer before it but fixed and so on. We did not try this, but it might give good results for this use case, especially for deeper networks with vanishing gradients.
 
-The first simple LSTM we tested by simply replacing the feed forward layers with LSTM layers immediately improved the results by 16% without any further adjustments. But this showed the issues with a fixed learning rate, as the gradient regularily exploded after every 10 - 15 epochs, as can be seen in @fig:exploding. One epoch is defined as one whole backward pass of all the training data through the network. When adding FFV, increasing the input dimension per time frame from 2 to 9, SGD stopped working at all without manually tuning the learning rate.
+We compared online prediction and offline "prediction", where offline prediction got 400 ms of past audio and 400 ms of future audio from the onset of the backchannel utterance, and online prediction got 800 ms of past audio. Offline prediction gave 18% better results, but of course we are more interested in online prediction.
+
+The first simple LSTM we tested by simply replacing the feed forward layers with LSTM layers immediately improved the results by 16% without any further adjustments. But this showed the issues with a fixed learning rate, as the gradient regularily exploded after every 10 - 15 epochs, as can be seen in @fig:exploding. When adding FFV, increasing the input dimension per time frame from 2 to 9, SGD stopped working at all without manually tuning the learning rate. One solution to this would be to use a scheduler. A scheduler automatically adjusts the learning rate depending on some condition. One example is simple exponential decay, which exponentially decreases the initial learning rate with a fixed factor. Another method is newbob scheduling, which exponentially decreases the learning rate when the validation error stops decreasing or only decreases very little. These schedulers need parameter tuning, making them hard to use without experimenting more.
 
 ![Exploding gradient while training a LSTM network. Shown is the training loss over epochs](img/20170208233441.png){#fig:exploding}
 
-These problem was solved by using Adam [@kingma_adam:_2014] instead of SGD, which is a gradient descent method related to Adadelta and Adagrad which also incorporates momentum in some way, see @fig:adam. No one really understands how these work, but Adam with a fixed learning rate of 0.001 worked great for us, so we did all further testing using Adam.
+We solved the problem of automatically adjusting the learning rate by using Adam [@kingma_adam:_2014] instead of SGD, which is a gradient descent method related to Adadelta and Adagrad which also incorporates momentum in some way and intelligently adjusts the learning rate. No one really understands how this works, but Adam with a fixed learning rate of 0.001 worked great for us, so we did all further testing using Adam.
 
-![The Adam method for stochastic optimization. I have no idea what any of those letters mean, but it's been cited a bazillion times and works great.](img/adam.png){#fig:adam}
+<!--![The Adam method for stochastic optimization. I have no idea what any of those letters mean, but it's been cited a bazillion times and works great.](img/adam.png){#fig:adam}-->
 
 
 The LSTM networks we tested were prone to overfitting very quickly, but they still
 provided better results after two to three epochs than normal feed forward networks after 100 epochs. Overfitting happens when the results still improve on the training data set, but plateau or get worse on the validation data set. This means the network is starting to learn specific quirks in the training data set by heart, which it then can't apply on other data.
 
+We tried two regularization methods to reduce overfitting.
+
 We tried adding dropout layers to the networks to try and avoid overfitting and to generally improve the results. Dropout layers randomly disconnect a specified fraction of neurons in a layer, different for every training batch. This should in theory help the network interpret it's inputs even when it is partially "blind". For validation the dropout is deactivated, so the network is able to take advantage of every single feature when actually using it as a predictor. In this case, we tried adding different dropout settings such as "input (20% dropout) $\rightarrow$ 125 neurons (50% dropout) $\rightarrow$ 80 neurons (50% dropout) $\rightarrow$ output" but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
+
+The solution that worked was L2-Regularization, which reduced the overfitting problem greatly and slightly improved the
+results, as can be seen in the example in @fig:l2reg.
 
 ![The same LSTM network trained without (left) and with (right) L2-Regularization. Note that without regularization the network starts overfitting after two epochs. With regularization training and validation loss mostly stay the same with regularization, and the validation error continues to improve. Training loss is blue, validation loss is red and validation error is orange.](img/20170209000001.png){#fig:l2reg}
 
 
-L2-Regularization reduced this problem and slightly improved the
-results, as can be seen in the example in @fig:l2reg.
 
 ## Evaluation {#eval-1}
 
@@ -436,11 +441,11 @@ utterances that are backchannels or silence) and `is_talking`
 (`= not is_listening`). An example of this can be seen in @fig:listening. A monologuing segment is the maximum possible
 time range in which one person is consistently talking and the other
 only listening. We only consider segments of a minimum length of five seconds to exclude sections of alternating conversation.
-The results did not significantly change when adjusting this minimum length between two and ten seconds.
+The results did not significantly change when adjusting this minimum length between two and ten seconds, though the amount of evaluation data and thus the accuracy of the evaluation values changed.
 
 ![A short audio segment showing talking and listening areas. Note that a backchannel from Speaker B in the middle ("yeah") does not classify that area as speaking. At the end both people talk at the same time, so speaker B needs to repeat herself.](img/20170211153622.png){#fig:listening}
 
-An interesting aspect is that in our tests the predictors had difficulty distinguishing segments of speech that indicate a backchannel and those that indicate a speaker change. Subjectively, this makes sense because in many cases a backchannel can be seen as a replacement for starting to talk more extensively.
+An interesting aspect is that in our tests the predictors had difficulty distinguishing segments of speech that indicate a backchannel and those that indicate a turn taking (speaker change). Subjectively, this makes sense because in many cases a backchannel can be seen as a replacement for starting to talk more extensively.
 
 # Results
 
@@ -602,13 +607,13 @@ We implemented multiple software components to help us understand the data, extr
 
 ### Description
 
-The web visualizer is an interactive tool to display time-based data. It can display audio files as waveforms like other popular audio editing software. It can also show arbitrary data that has one or more dimensions per time frame of arbitrary length. We use this to show the features we extract from the audio and use for training of the neural networks, as well as the resulting network outputs. It can show these either as a line graph as seen in @fig:postproc or as a grayscale color value, as seen in @fig:grayscale.
+The web visualizer is an interactive tool to display time-based data. It can display audio files as waveforms similar to other popular audio editing software. It can also show arbitrary data that has one or more dimensions per time frame of arbitrary length. We use this to show the features we extract from the audio and use for training of the neural networks, as well as the resulting network outputs. It can show these either as a line graph as seen in @fig:postproc or as a grayscale color value, as seen in @fig:grayscale.
 
 ![The output of a neural network trying to predict backchannel categories for a audio segment. The first category is "No Backchannel", so it is roughly inverse to the other categories (neutral, question, surprised, affirmative, positive). From top to bottom: Audio, Text, Raw NN output, Smoothed NN output. White means higher probabilities, black means lower probabilities.](img/20170211151523.png){#fig:grayscale}
 
 In addition, it can also show time-aligned textual labels either as seperate features or as overlays over the other data. We use this to display the transcriptions below the audio, and to highlight ranges of audio, for example which areas we use as positive and negative prediction areas, or which areas we interpret as "talking" or "listening" as can be seen in @fig:listening. This allows us to quickly check if the chosen prediction areas make general sense.
 
-The user can choose a specific or random conversation from the training, validation or evaluation data set. Then they can choose to view and combination of the available features from a categorical tree [@fig:categories]. The user can zoom into any section of the data and play the audio, the UI will follow the current playback position.
+The user can choose a specific or random conversation from the training, validation or evaluation data set. Then they can choose to view a combination of the available features from a categorical tree [@fig:categories]. The user can zoom into any section of the data and play the audio, the UI will follow the current playback position.
 
 \begin{wrapfigure}{R}{0.3\textwidth}
 \centering
@@ -616,25 +621,40 @@ The user can choose a specific or random conversation from the training, validat
 \caption{Selecting a feature to display in the Web Visualizer.\label{fig:categories}}
 \end{wrapfigure}
 
-The user can also save the extact current GUI state including zoom and playback position to generate a unique URL that will restore the visualizer to that state when loaded.
+The user can also save the exact current GUI state including zoom and playback position to generate a unique URL that will restore the visualizer to that state when loaded.
 
-Some presets are also available, such as the default view which will show both channels of a conversation, together with the transcriptions, power, pitch and highlights for the training areas. Another meta preset is the NN output view, which includes a single audio channel and the raw output, smoothed output and resulting audio track for a trained network, as seen for example in @fig:postproc. The exact configuration can be chosen in a form [@fig:loadingnn]. Newly trained networks will automatically be available when the training is finished.
+Some state presets are also available, such as the default view which will show both channels of a conversation, together with the transcriptions, power, pitch and highlights for the training areas. Another meta preset is the NN output view, which includes a single audio channel and the raw output, smoothed output and resulting audio track for a trained network, as seen for example in @fig:postproc. The exact configuration can be chosen in a form [@fig:loadingnn]. Newly trained networks will automatically be available when the training is finished, allowing quick subjective evaluation of the results.
 
 ![Loading the output of the best epoch of specific network for channel A of the current conversation](img/20170211161913.png){#fig:loadingnn width=70%}
 
 
 ### Implementation
 
-The visualizer is split into two parts, the server side (backend) and the client side (frontend). The server is written in python. It accepts connections via Websockets. It sends a list of available conversation IDs and corresponding features. The client can then select a conversation and dynamically load any combination of the available features, which the server will evaluate on demand while caching the most recently used features. The backend is in a shared code base with the extraction code, so it uses parts of the same code we also use for training and evaluation. The client is written in TypeScript with MobX and React.
+The visualizer is split into two parts, the server side (backend) and the client side (frontend). The server is written in python. It accepts connections via Websockets. It sends a list of available conversation IDs and corresponding features. The client can then select a conversation and dynamically load any combination of the available features, which the server will evaluate on demand while caching the most recently used features. The backend is in a shared code base with the extraction code, so it uses parts of the same code we also use for training and evaluation.
+
+The client is written in TypeScript with MobX and React and runs in a web browser. It uses HTML canvas to draw the visualization of the numerical features. The other visualizations are drawn using DOM elements with CSS Flexbox. The drawn waveform shows the maximum and minimum as a dark blue color, and the root mean square ($\text{rms}=\sqrt{\frac{1}{n} (x_1^2 + x_2^2 + \dots + x_n^2)}$ of the signal (similar to the signal power) as a lighter blue overlay. Audio has many datapoints, for example, for 8kHz Audio of 10 minutes, the UI needs to iterate over 5 million data points. When the Audio is played back, the whole view shifts by some fraction of a pixel every 1/60th of a second, which is too much data for a browser client to handle. The trivial rendering of this takes $O(n)$ time for every rerender, where n is the total number of samples that are in the region that is currently on screen. To speed this up, the UI uses an intelligent data structure based on binary trees to cache the values for [min, max, count, RMS] for every range over the indices $[k \cdot 2^l, (k+1) \cdot 2^l - 1]$, where $k\in\mathbb{N}$ is the offset and $l\in\mathbb{N}$ is the "zoom level". Now every access takes only $O(\log n)$ time. For example, when requesting the range $[3, 13]$, the system will use the cached values for $[2, 3], [4, 7], [8, 11], [12]$. This works because min, max and rms can all be combined from partial results without needing to know the individual values. For example $max(5,6,1,4,7,1,5,3) = max(max(5,6,1,4), 7, max(1,5,3))$. For RMS, this can be done by saving both the square sum and element counts for every range.
 
 
 
 ## Extraction and Learning
 
-We wrote our own parsing toolkit for the transcriptions and word alignments from the SwDA [@swda].
+We wrote our own parsing toolkit for the transcriptions and word alignments from the SwDA [@swda], which are formatted as plain text files.
 We used the Python interface of the Janus Recognition Toolkit, numpy, scipy and sklearn for feature extraction and filters. We implemented a small learning toolkit on top of Lasagne that reads the extraction and training configuration from a JSON file and outputs the training history as JSON. We used git to track the changes and git tags so every extraction and training output had the exact state of the code attached. This allowed us to easily reproduce different outputs. We also wrote a meta configuration generator, that takes a set of interesting configuration parameters and outputs all the relevant permutations, which can then be extracted, trained and evaluated in parallel.
 
-Many of the methods for extraction were written as pure functions, which allowed us to create a transparent caching system as a function decorator that automatically caches the result of expensive functions on disk. This way, we do not need to explicitly seperate the extraction from training and write data files, we can simply run the training and the extraction only runs when the extraction parameters (features / context size) changes. We also used joblib, a python library for easy parallelization, to enable the extraction and evaluation processes to use all available CPU cores.
+### Automatic caching
+
+Many of the methods for extraction were written as pure functions, which allowed us to create a transparent caching system as a python function decorator that automatically caches the result of expensive functions on disk. For example, consider this function:
+
+```python
+@functools.lru_cache
+@DiskCache
+def get_power(adc_filename: str, window_ms: int) -> Feature:
+    return Feature(numpy.log10(load_adc(adc_filename).adc2pow))
+```
+
+When this function is called, the decorator function `DiskCache` is called first. This function creates a deterministic JSON object of the function name, function source code, and parameters. This JSON object is run through sha256. If a serialized (pickled) file with the hash as the filename exists in the cache folder, that file is loadet. Otherwise, the function is evaluated and it's result is saved to the cache folder together with the meta json file. To circumvent issues with thousands of files in a single folder, the first two letters of the hash are used as a subdirectory name, like git does it for its object database. The first time this function is run it takes some time. The subsequent times, it is loaded from disk and not evaluated. Because of automatic disk caching by the OS, this becomes nearly instant for frequently accessed files. In addition, the lru_cache ensures that recently used function results are cached in RAM, which causes an additional speed boost because it circumvents the time otherwise spent unpickling the file.
+
+This way, we do not need to explicitly seperate the extraction from training and write data files, we can simply run the training and the extraction only runs when the extraction parameters (features / context size) changes. We also used joblib, a python library for easy parallelization, to enable the extraction and evaluation processes to use all available CPU cores.
 
 ## Evaluation Visualizer
 
