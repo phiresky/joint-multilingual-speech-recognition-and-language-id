@@ -11,19 +11,53 @@ title: |
 
 # Introduction
 
-Motivation, Goals
+A listener backchannel is generally defined as any kind of feedback a listener
+gives a speaker as an acknowledgment in a segment of conversation that is primarily one-way.
+They include but are not limited to nodding [@watanabe_voice_1989-1], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport, which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
+
+This thesis concentrates on short phrasal backchannels consisting
+of a maximum of three words. We try to predict these for a given speaker
+audio channel in a causal way, using only past information.
+
+This allows the predictor to be used in an online environment, for example to make a conversation with an artificial assistant more natural.
 
 # Related Work
 
+Most related work is either completely rule-based or has at least some manual components.
+
+@ward_prosodic_2000 were the first to propose specific rules for when to produce backchannel feedback based on acousting cues:
+
+> Upon detection of
+> 
+> - a region of pitch less than the 26th-percentile pitch level and
+> - continuing for at least 110 milliseconds,
+> - coming after at least 700 milliseconds of speech,
+> - providing you have not output back-channel feedback within the preceding 800 milliseconds,
+> - after 700ms wait,
+>
+> you should produce back-channel feedback. [@ward_prosodic_2000]
+
+These rules were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted various pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 to 0.221.
+
+A lot of related research is based on Japanese corpora ([@okato_insertion_1996], [@ward_using_1996], [@ward_prosodic_2000,@fujie_conversation_2004,@takeuchi_timing_2004,@kitaoka_response_2005,@nishimura_spoken_2007]), some on english corpora ([@ward_prosodic_2000, @morency_predicting_2008, @de_kok_multimodal_2009, @huang_learning_2010, @ozkan_concensus_2010, @ozkan_concensus_2010, @ozkan_latent_2010]) and some dutch [@morency_probabilistic_2010, @de_kok_learning_2010].
+
+[@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-keeping, and turn-taking.
+
+Rule-based approaches can be inflexible and error-prone and involve a lot of manual fine-tuning. A first approach for distinguishing different speech acts, including BCs, using a combination of hidden markov models and neural networks was proposed by @ries_hmm_1999.
+
+Our previous work also includes using a feed-forward neural network for backchannel prediction [@mueller_using_2015-2].
+
+@de_kok_survey_2012-1 compared different evaluation metrics for backchannel predictors. As an objective evaluation method, the use of the F1-Score has been established, but the accepted margin of error varies.
 
 Collection:
 
+<!--
 - @watanabe_voice_1989-1
     - not found
 - @okato_insertion_1996
     - Languages: Japanese
     - Truth type: utterances
-    - Features: Pause
+    - Features: Pause, Pitch
     - Method: HMM for pitch contour
     - 
     - Evaluation Method: 
@@ -75,30 +109,24 @@ Collection:
     - Corpus: MultiLis corpus
     - Special: building consensus Fconsensus
 - @de_kok_learning_2010
+    - Dutch
 - @huang_learning_2010
     - Subjective, on live corpus
     - Fconsensus
+    - English
 - @ozkan_concensus_2010
     - RAPPORT dataset
+    - English
 - @ozkan_latent_2010
+    - RAPPORT (english)
 - @poppe_backchannel_2010
 - @de_kok_speaker-adaptive_2013
 - @ozkan_latent_2013
 - @de_kok_iterative_2014
 - @mueller_using_2015-2
 
+-->
 # Backchannel Prediction {#sec:extraction}
-
-A listener backchannel is generally defined as any kind of feedback a listener
-gives a speaker as an acknowledgment in a segment of conversation that is primarily one-way.
-They include but are not limited to nodding [@watanabe_voice_1989-1], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport, which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
-
-(-> motivation)
-This thesis concentrates on short phrasal backchannels consisting
-of a maximum of three words. We try to predict these for a given speaker
-audio channel in a causal way, using only past information.
-
-This would allow the predictor to be used in an online environment, for example to make a conversation with an artificial assistant more natural.
 
 ## BC Utterance selection {#sec:extractio:subsec:bc-utterance-selection}
 
@@ -239,7 +267,9 @@ Because the placement of backchannels is subjective, we did a subjective evaluat
 
 We concentrated on two methods:
 
-First, we evaluated human performance with the same evaluation method. Participants listened to a monologuing audio segment and could give backchannel responses live by pressing the spacebar. The results of this are combined to calculate the average F1-Score of humans.
+First, we evaluated human performance with the same evaluation method.
+Participants first chose a set of backchannels. Whenever they pressed the spacebar, a random audio sample from their selected track would play. Then they listened to ten monologuing audio segments of more than 15 seconds and could give backchannel responses.
+The results of this were combined to calculate the average F1-Score of humans.
 
 Secondly, we asked humans to rate the output of the machine predictions on a scale of one two five with one being "completely unnatural" and five being "completely natural".
 
