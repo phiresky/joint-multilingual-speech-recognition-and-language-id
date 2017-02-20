@@ -13,7 +13,7 @@ title: |
 
 A listener backchannel is generally defined as any kind of feedback a listener
 gives a speaker as an acknowledgment in a segment of conversation that is primarily one-way.
-They include but are not limited to nodding [@watanabe_voice_1989-1], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport, which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
+They include but are not limited to nodding [@watanabe_voice_1989], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport, which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
 
 This thesis concentrates on short phrasal backchannels consisting
 of a maximum of three words. We try to predict these for a given speaker
@@ -39,15 +39,15 @@ Most related work is either completely rule-based or has at least some manual co
 
 These rules were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted various pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 to 0.221.
 
-A lot of related research is based on Japanese corpora ([@okato_insertion_1996], [@ward_using_1996], [@ward_prosodic_2000,@fujie_conversation_2004,@takeuchi_timing_2004,@kitaoka_response_2005,@nishimura_spoken_2007]), some on english corpora ([@ward_prosodic_2000, @morency_predicting_2008, @de_kok_multimodal_2009, @huang_learning_2010, @ozkan_concensus_2010, @ozkan_concensus_2010, @ozkan_latent_2010]) and some dutch [@morency_probabilistic_2010, @de_kok_learning_2010].
+A lot of related research is based on Japanese corpora ([@okato_insertion_1996; @ward_using_1996; @ward_prosodic_2000; @fujie_conversation_2004;@takeuchi_timing_2004;@kitaoka_response_2005;@nishimura_spoken_2007]), some on english corpora ([@ward_prosodic_2000;@morency_predicting_2008;@de_kok_multimodal_2009;@huang_learning_2010;@ozkan_concensus_2010;@ozkan_concensus_2010; @ozkan_latent_2010]) and some dutch [@morency_probabilistic_2010; @de_kok_learning_2010].
 
 [@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-keeping, and turn-taking.
 
 Rule-based approaches can be inflexible and error-prone and involve a lot of manual fine-tuning. A first approach for distinguishing different speech acts, including BCs, using a combination of hidden markov models and neural networks was proposed by @ries_hmm_1999.
 
-Our previous work also includes using a feed-forward neural network for backchannel prediction [@mueller_using_2015-2].
+Our previous work also includes using a feed-forward neural network for backchannel prediction [@mueller_using_2015].
 
-@de_kok_survey_2012-1 compared different evaluation metrics for backchannel predictors. As an objective evaluation method, the use of the F1-Score has been established, but the accepted margin of error varies.
+@de_kok_survey_2012 compared different evaluation metrics for backchannel predictors. As an objective evaluation method, the use of the F1-Score has been established, but the accepted margin of error varies.
 
 Collection:
 
@@ -140,13 +140,13 @@ categories.
 
 The most commonly used audio features in related research are fast and
 slow voice pitch slopes and pauses of varying lengths.
-[@ward_prosodic_2000; @truong_rule-based_2010-1; @morency_probabilistic_2010]. A neural network is able to learn advantageous feature representations on its own, so we simply feed it the absolute pitch and
+[@ward_prosodic_2000; @truong_rule-based_2010; @morency_probabilistic_2010]. A neural network is able to learn advantageous feature representations on its own, so we simply feed it the absolute pitch and
 power (signal energy) values for a given time context, from which it is able to
 calculate the pitch slopes and pause triggers on its own by subtracting the neighboring values in the time context for each feature.
 The power value used is the logarithm of the raw `adc2pow` value output by the Janus Recognition Toolkit (JRTk).
 
 We also try to use other tonal features used for speech recognition in addition to and instead of pitch and power.
-The first feature is the fundamental frequency variation spectrum (FFV) [@laskowski2008fundamental], which is a representation of changes in the fundamental frequency over time, giving a more accurate view of the pitch progression than the single-dimensional pitch value which can be very noisy. This feature has seven dimensions in the default configuration given by Janus.
+The first feature is the fundamental frequency variation spectrum (FFV) [@laskowski_fundamental_2008], which is a representation of changes in the fundamental frequency over time, giving a more accurate view of the pitch progression than the single-dimensional pitch value which can be very noisy. This feature has seven dimensions in the default configuration given by Janus.
 
 Other features we tried include the Mel-frequency cepstral coefficients (MFCC) with 20 dimensions \[ref\] and a set of
 bottleneck features trained on phoneme recognition using a feed forward neural network, which is used for speech recognition at the Interactive Systems Lab.
@@ -173,7 +173,7 @@ Another approach for choosing a training area would be to not choose two separat
 ## Training and Neural Network Design {#sec:training}
 
 We begin with a simple feed forward network architecture. The input layer consists of
-all the chosen features over a fixed time context. With a time context of $c\,\si{ms}$ and a feature dimension of $f$, this gives us a input dimension of $f \times \floor{c \over \SI{10}{ms}}$.
+all the chosen features over a fixed time context. With a time context of $c\,\si{ms}$ and a feature dimension of $f$, this gives us an input dimension of $f \times \floor{c \over \SI{10}{ms}}$.
 One or more hidden
 layers with varying numbers of neurons follow. After every layer we apply an activation function (also called a nonlinearity) like tanh or ReLU. The output layer is
 $(n+1)$--dimensional, where n is the number of backchannel categories we
@@ -201,7 +201,7 @@ a less noisy and more continuous output function.
 
 To ensure our predictor does not use any future information, the low-pass filter must be causal. A common low-pass filter is the gaussian blur, which folds the input function with a bell curve. This filter is symmetric, which in our case means it uses future information as well as past information. To prevent this, we cut the filter of asymmetrically for the right side (that would range in the future), with a cutoff at some multiple $c$ of the standard deviation $\sigma$. Then we shift the filter to the left so the last frame it uses is $\pm\SI{0}{ms}$ from the prediction target time. This means the latency of our prediction increases by $c\cdot\sigma\,ms$. If we choose $c=0$, we cut off the complete right half of the bell curve, meaning we do not need to shift the filter, which keeps the latency at 0 at the cost of accuracy of the low-pass filter.
 
-Another possible filter to use would be the Kalman Filter [@kalman_new_1960-1], which tries to predict the value of a function based on a noisy function masking the actual function. This filter has many parameters requiring tuning, so we used the described gaussian filter method.
+Another possible filter to use would be the Kalman Filter [@kalman_new_1960], which tries to predict the value of a function based on a noisy function masking the actual function. This filter has many parameters requiring tuning, so we used the described gaussian filter method.
 
 After this filter we use a fixed trigger threshold to extract the ranges in the output where the predictor is fairly confident that a backchannel should happen. We trigger exactly once for each of these ranges.
 We have multiple possibilities to choose the trigger anchor with in each range.
@@ -278,7 +278,7 @@ Secondly, we asked humans to rate the output of the machine predictions on a sca
 
 ## Dataset
 
-We used the switchboard dataset [@swb] which consists of 2438
+We used the switchboard dataset [@godfrey_switchboard-1_1993] which consists of 2438
 telephone conversations of five to ten minutes, 260 hours in total.
 Pairs of participants from across the United States were encouraged to talk about a specific topic selected from 70 possibilities. Conversation partners and topics were selected so two people would only talk once with each other and every person would only discuss a specific topic once.
 These telephone conversations are annotated with transcriptions and word alignments \cite{swbalign} with a total of 390k utterances or 3.3 million words. The audio data is given as stereo files, where the first speaker is on the left channel and the second speaker on the right channel. We split the dataset randomly into 2000 conversations for training, 200 for validation and 238 for evaluation. As opposed to many other datasets, the transcriptions also contain backchannel utterances like _uh-huh_ and _yeah_, making it ideal for this task.
@@ -295,7 +295,7 @@ To better understand and visualize the dataset, we first wrote a complete visual
 
 ### Backchannel utterance selection
 
-We used annotations from The Switchboard Dialog Act Corpus [@swda] to
+We used annotations from The Switchboard Dialog Act Corpus [@jurafsky_switchboard_1997] to
 decide which utterances to classify as backchannels. The SwDA contains
 categorical annotations for utterances for about half of the data of the
 Switchboard corpus. An excerpt of the most common categories can be seen in @tbl:swda.
@@ -389,7 +389,8 @@ def is_backchannel(utterance):
         return False
     previous_text = noise_filter(previous(utterance))
     return (text in valid_backchannels and
-            (is_silent(previous_text) or is_backchannel(previous(utterance)))
+            (is_silent(previous_text) or
+             is_backchannel(previous(utterance)))
 ```
 
 This method gives us a total of 61645
@@ -401,7 +402,7 @@ words (2.21%). Note that the percentage of words is much lower because backchann
 
 #### Acoustic features
 
-We used the Janus Recognition Toolkit [@janus] for the acoustic feature extraction (power, pitch tracking, FFV, MFCC).
+We used the Janus Recognition Toolkit [@levin_janus-iii_2000] for the acoustic feature extraction (power, pitch tracking, FFV, MFCC).
 
 These features are extracted for 32ms frame windows, with a frame shift of 10ms. This gives us 100 frames per feature per second.
 
@@ -433,7 +434,7 @@ We can also choose to only use every n-th timestep, which we call the "context s
 
 ## Training {#training-1}
 
-We used Theano [@theano] with Lasagne v1.0-dev [@lasagne] for rapid prototyping
+We used Theano [@theano_development_team_theano:_2016] with Lasagne v1.0-dev [@dieleman_lasagne:_2015] for rapid prototyping
 and testing of different parameters. We trained a total of over 200
 network configuration with various context lengths (500ms to 2000ms),
 context strides (1 to 4 frames), network depths ranging from one to four
@@ -548,7 +549,7 @@ Figure \ref{varylstm} shows a comparison between feed forward and LSTM networks.
 
 We compared different layer sizes for our LSTM networks, as shown in Figure \ref{varylayers}. A network depth of two hidden layers worked best, but the results are adequate with a single hidden layer or three hidden layers.
 
-In \autoref{fig:final}, our final results are given for the completely independent evaluation data set. We compared the results by Mueller et al. (2015) \cite{mueller} with our system. They used the same dataset, but focused on offline predictions, meaning their network had future information available, and they evaluated their performance on the whole corpus including segments with silence and with alternating conversation. We adjusted our baseline and evaluation system to match their setup. As can be seen in Figure \ref{fig:mueller}, our predictor performs significantly better.
+In \autoref{fig:final}, our final results are given for the completely independent evaluation data set. We compared the results by Mueller et al. (2015) [@mueller_using_2015] with our system. They used the same dataset, but focused on offline predictions, meaning their network had future information available, and they evaluated their performance on the whole corpus including segments with silence and with alternating conversation. We adjusted our baseline and evaluation system to match their setup. As can be seen in Figure \ref{fig:mueller}, our predictor performs significantly better.
 All other related research used different languages, datasets or evaluation methods, making a direct comparison meaningless.
 
 Figure \ref{fig:ourbest} shows the results with our own evaluation method. We provide values for different margins of error used in other research. Subjectively, missing a BC trigger may be more acceptable than a false positive, so we also provide a result with a balanced precision and recall. 
@@ -649,13 +650,13 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
 \caption{Final best results on the evaluation set (chosen by validation set)}\label{fig:final}
 
 
-\csubfloat[Comparison with previous research. Mueller et al. did their evaluation without the constraints defined in \autoref{eval-1}, so we adjusted our baseline and evaluation to match their setup]{
+\csubfloat[Comparison with previous research. Müller et al. did their evaluation without the constraints defined in \autoref{eval-1}, so we adjusted our baseline and evaluation to match their setup]{
     \begin{tabular}{lccc}
     \hline\noalign{\smallskip}
         Predictor & Precision & Recall & F1-Score \\
         \noalign{\smallskip}\svhline\noalign{\smallskip}
         Baseline (random) & 0.0417 & 0.0417 & 0.0417 \\
-        Müller et al. (offline) \cite{mueller} & -- & -- & 0.109 \\
+        Müller et al. (offline) \cite{mueller_using_2015} & -- & -- & 0.109 \\
         Our results (offline, context of \SIrange{-750}{750}{ms}) & 0.114 & 0.300 & \bf{0.165} \\
         Our results (online, context of \SIrange{-1500}{0}{ms}) & 0.100 & 0.318 & 0.153 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
@@ -663,7 +664,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
     \label{fig:mueller}
 }
 
-\csubfloat[Results with our evaluation method with various margins of error used in other research \cite{survey}. Performance improves with a wider margin width and with a later margin center.]{
+\csubfloat[Results with our evaluation method with various margins of error used in other research \cite{de_kok_survey_2012}. Performance improves with a wider margin width and with a later margin center.]{
     \begin{tabular}{clccc}
     \hline\noalign{\smallskip}
         Margin of Error & Constraint & Precision & Recall & F1-Score \\
@@ -724,7 +725,7 @@ The client is written in TypeScript with MobX and React and runs in a web browse
 
 ## Extraction and Learning
 
-We wrote our own parsing toolkit for the transcriptions and word alignments from the SwDA [@swda], which are formatted as plain text files.
+We wrote our own parsing toolkit for the transcriptions and word alignments from the SwDA [@jurafsky_switchboard_1997], which are formatted as plain text files.
 We used the Python interface of the Janus Recognition Toolkit, numpy, scipy and sklearn for feature extraction and filters. We implemented a small learning toolkit on top of Lasagne that reads the extraction and training configuration from a JSON file and outputs the training history as JSON. We used git to track the changes and git tags so every extraction and training output had the exact state of the code attached. This allowed us to easily reproduce different outputs. We also wrote a meta configuration generator, that takes a set of interesting configuration parameters and outputs all the relevant permutations, which can then be extracted, trained and evaluated in parallel.
 
 ### Automatic caching
@@ -772,7 +773,7 @@ Our approach of choosing the training areas may not be optimal because the delay
 
 Our tests of predicting multiple separate categories of BCs did not produce any notable results, further work is needed to analyse whether more context or features are needed to facilitate this. 
 
-Because backchannels are a largely subjective phenomenon, a user study would be helpful to subjectively evaluate the performance of our predictor and to compare it with human performance in our chosen evaluation method. Another method would be to find consensus for backchannel triggers by combining the predictions of multiple human subjects for a single speaker channel as described by Huang et al. (2010) as "parasocial consensus sampling" \cite{huang2010learning}.
+Because backchannels are a largely subjective phenomenon, a user study would be helpful to subjectively evaluate the performance of our predictor and to compare it with human performance in our chosen evaluation method. Another method would be to find consensus for backchannel triggers by combining the predictions of multiple human subjects for a single speaker channel as described by Huang et al. as "parasocial consensus sampling" [@huang_parasocial_2010].
 
 An interesting extension for use in Virtual Assistants would be to also predict speaker changes in addition to backchannels. Our current model already often predicts a backchannel at a time where the speaker stops talking and expects a longer response. Our current model of predicting [No BC, BC] could be extended to predict [No BC, BC, Speaker Change]. This would allow a virtual assistant to give natural sounding backchannel responses and detect when it is supposed to start answering the query.
 

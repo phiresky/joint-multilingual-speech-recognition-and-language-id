@@ -22,5 +22,4 @@ pandoc \
 	texfot pdflatex -interaction=batchmode thesis.tex
 	echo -e "\e[31mFinal run\e[0m"
 	texfot pdflatex -interaction=nonstopmode thesis.tex
-
 )
