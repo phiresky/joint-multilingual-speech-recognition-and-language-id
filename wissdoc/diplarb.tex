@@ -19,6 +19,10 @@
 \usepackage{subfig}
 \usepackage{wrapfig}
 \usepackage{amsfonts}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage[USenglish,american]{babel}
 
  \makeatletter
 \def\svhline{%
@@ -26,6 +30,7 @@
    \reserved@a\@xhline}
     \makeatother
 
+\renewcommand{\citet}{\citep}
 % \usepackage{varioref}
 % \usepackage{verbatim}
 % \usepackage{float}    %z.B. \floatstyle{ruled}\restylefloat{figure}
@@ -167,7 +172,7 @@ $body$
 %\bibliographystyle{gerplain} % abbrvnat unsrtnat
 % spezielle Zitierstile: Labels mit vier Buchstaben und Jahreszahl
 %\bibliographystyle{itmalpha}  % ausgeschriebene Vornamen der Autoren
-\bibliography{diplarb}
+\bibliography{bib}
 %% ++++++++++++++++++++++++++++++++++++++++++
 %% Index
 %% ++++++++++++++++++++++++++++++++++++++++++
