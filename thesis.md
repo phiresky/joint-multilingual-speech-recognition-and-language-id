@@ -13,20 +13,24 @@ title: |
 
 A listener backchannel is generally defined as any kind of feedback a listener
 gives a speaker as an acknowledgment in a segment of conversation that is primarily one-way.
-They include but are not limited to nodding [@watanabe_voice_1989], a shift in the gaze direction and short phrases. Backchannels are said to help build rapport, which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
+They include but are not limited to nodding [@watanabe_voice_1989], a shift in the gaze direction, and short phrases (“uh-huh”, “hum", “yeah", “right”, etc.). Backchannels are said to help build rapport, which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
 
 This thesis concentrates on short phrasal backchannels consisting
 of a maximum of three words. We try to predict these for a given speaker
-audio channel in a causal way, using only past information.
+audio channel in a causal way, using only past information. This allows the predictor to be used in an online environment.
 
-This allows the predictor to be used in an online environment, for example to make a conversation with an artificial assistant more natural.
+
+Artificial assistants like Siri, Alexa, etc. are becoming increasingly popular, but they are still distinctively unhuman. Adding backchannel responses could help make a conversation with an artificial assistant feel more natural.
 
 # Related Work
 
-Most related work is either completely rule-based or has at least some manual components.
+Most related work is either completely rule-based or uses at least some manual components in combination with data-driven learning.
 
 @ward_prosodic_2000 were the first to propose specific rules for when to produce backchannel feedback based on acousting cues:
 
+> "[...] we formulate
+> the following predictive rule for English:
+> 
 > Upon detection of
 > 
 > - a region of pitch less than the 26th-percentile pitch level and
@@ -35,23 +39,23 @@ Most related work is either completely rule-based or has at least some manual co
 > - providing you have not output back-channel feedback within the preceding 800 milliseconds,
 > - after 700ms wait,
 >
-> you should produce back-channel feedback. [@ward_prosodic_2000]
+> you should produce back-channel feedback." [@ward_prosodic_2000]
 
-These rules were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted various pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 to 0.221.
+These rules were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted multiple different pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 with only acoustic features to 0.221.
 
-A lot of related research is based on Japanese corpora ([@okato_insertion_1996; @ward_using_1996; @ward_prosodic_2000; @fujie_conversation_2004;@takeuchi_timing_2004;@kitaoka_response_2005;@nishimura_spoken_2007]), some on english corpora ([@ward_prosodic_2000;@morency_predicting_2008;@de_kok_multimodal_2009;@huang_learning_2010;@ozkan_concensus_2010;@ozkan_concensus_2010; @ozkan_latent_2010]) and some dutch [@morency_probabilistic_2010; @de_kok_learning_2010].
+A lot of related research is based on Japanese speech ([@okato_insertion_1996; @ward_using_1996; @ward_prosodic_2000; @fujie_conversation_2004;@takeuchi_timing_2004;@kitaoka_response_2005;@nishimura_spoken_2007]), some on English corpora ([@ward_prosodic_2000;@morency_predicting_2008;@de_kok_multimodal_2009;@huang_learning_2010;@ozkan_concensus_2010;@ozkan_concensus_2010; @ozkan_latent_2010]) and some on Dutch speech [@morency_probabilistic_2010; @de_kok_learning_2010].
 
 [@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-keeping, and turn-taking.
 
-Rule-based approaches can be inflexible and error-prone and involve a lot of manual fine-tuning. A first approach for distinguishing different speech acts, including BCs, using a combination of hidden markov models and neural networks was proposed by @ries_hmm_1999.
+Rule-based approaches can be inflexible, error-prone and involve a lot of manual fine-tuning. A first approach for distinguishing different speech acts, including BCs, using a combination of hidden markov models and neural networks was proposed by @ries_hmm_1999.
 
-Our previous work also includes using a feed-forward neural network for backchannel prediction [@mueller_using_2015].
+Previous work at this institute also includes using a feed-forward neural network for backchannel detection [@mueller_using_2015], though this work focused on offline "prediction", meaning their input features included sections of audio happening during or after the backchannel, making it unsuitable for a real-time environment.
 
-@de_kok_survey_2012 compared different evaluation metrics for backchannel predictors. As an objective evaluation method, the use of the F1-Score has been established, but the accepted margin of error varies.
-
+@de_kok_survey_2012 compared different evaluation metrics for backchannel predictors. As an objective evaluation method, the use of the F1-Score has been established, but the margin of error to accept a prediction as correct varies. Together with the fact that no one standard data set exists this makes a comparison between different evaluation results hard.
+<!--
 Collection:
 
-<!--
+
 - @watanabe_voice_1989-1
     - not found
 - @okato_insertion_1996
@@ -126,11 +130,12 @@ Collection:
 - @mueller_using_2015-2
 
 -->
+
 # Backchannel Prediction {#sec:extraction}
 
 ## BC Utterance selection {#sec:extractio:subsec:bc-utterance-selection}
 
-The definition of backchannels varies in literature. There are many different kinds of phrasal backchannels, they can be non-committal ("uh huh", "yeah"), positive/confirming ("oh how neat", "great"), negative/surprised ("you're kidding", "oh my god"), questioning ("oh are you", "is that right"), et cetera.
+The definition of backchannels varies in literature. There are many different kinds of phrasal backchannels, they can be non-committal ("uh huh", "yeah"), positive / confirming ("oh how neat", "great"), negative / surprised ("you're kidding", "oh my god"), questioning ("oh are you", "is that right"), et cetera.
 To simplify the problem, we initially only try to predict the trigger times for any
 type of backchannel, ignoring the distinction between different kinds of positive or negative
 responses. Later we also try to distinguish between a limited set of
@@ -138,44 +143,49 @@ categories.
 
 ## Feature selection
 
-The most commonly used audio features in related research are fast and
-slow voice pitch slopes and pauses of varying lengths.
-[@ward_prosodic_2000; @truong_rule-based_2010; @morency_probabilistic_2010]. A neural network is able to learn advantageous feature representations on its own, so we simply feed it the absolute pitch and
-power (signal energy) values for a given time context, from which it is able to
-calculate the pitch slopes and pause triggers on its own by subtracting the neighboring values in the time context for each feature.
-The power value used is the logarithm of the raw `adc2pow` value output by the Janus Recognition Toolkit (JRTk).
+The most commonly used acoustic features in related research are fast and
+slow voice pitch slopes and pauses of varying lengths 
+[@ward_prosodic_2000; @truong_rule-based_2010; @morency_probabilistic_2010]. A neural network is able to learn advantageous feature representations on its own. This means we can feed it the absolute pitch and
+power (signal energy) values for a given time context, from which the network is able to
+automatically extract the pitch slopes and pause triggers by subtracting the neighboring values in the time context for each feature.
 
-We also try to use other tonal features used for speech recognition in addition to and instead of pitch and power.
-The first feature is the fundamental frequency variation spectrum (FFV) [@laskowski_fundamental_2008], which is a representation of changes in the fundamental frequency over time, giving a more accurate view of the pitch progression than the single-dimensional pitch value which can be very noisy. This feature has seven dimensions in the default configuration given by Janus.
+We also evaluated using other tonal features used for speech recognition in addition to and instead of pitch and power.
+The first feature is the fundamental frequency variation spectrum (FFV) [@laskowski_fundamental_2008], which is a representation of changes in the fundamental frequency over time, giving a more accurate view of the pitch progression than the single-dimensional pitch value, which can be very noisy. This feature has seven dimensions in the default configuration given by the Janus Recognition Toolkit [@levin_janus-iii_2000].
 
-Other features we tried include the Mel-frequency cepstral coefficients (MFCC) with 20 dimensions \[ref\] and a set of
-bottleneck features trained on phoneme recognition using a feed forward neural network, which is used for speech recognition at the Interactive Systems Lab.
+Other features we tried include the Mel-frequency cepstral coefficients (MFCCs) with 20 dimensions, and various combinations of all of the above<!-- and a set of bottleneck features trained on phoneme recognition using a feed forward neural network, which is used for speech recognition at the Interactive Systems Lab-->.
 
 ## Training area selection {#sec:selection}
 
 We generally assume to have two separate but synchronized audio tracks, one for the speaker and one for the listener, each with the corresponding transcriptions.
-We need to choose which areas of audio we use to train the network. We
+We need to choose which areas of audio we use to train the network. As we
 want to predict the backchannel without future information (also called _causally_ or
-_online_), so we need to train the network to detect segments of audio
+_online_), we need to train the network to detect segments of audio
 from the speaker track that probably cause a backchannel in the listener
-track. The easiest method is to choose the beginning of the utterance in the transcript of the listener channel as an anchor $t$, and then use a fixed context range of width $w$ before that as the audio range to train the network to predict a backchannel ($[t-w, t]$). The width can range from a few hundred milliseconds to multiple seconds. We feed all the extracted features for this time range into the network at once, from which it will predict if a backchannel at time $t$ is appropriate. This approach is easy because it only requires searching for all backchannel utterance timestamps and then extracting the calculated range of audio. It may not be optimal though, because the delay between the last utterance of the speaker and the backchannel can vary significantly in the training data. This means it is not guaranteed that the training range will contain the actual trigger for the backchannel, which is assumed to be the last few words said by the speaker, and even if it does the last word will not be aligned within the context. This causes the need for the network to first learn to align it's input, making training harder and slower.
+track.
 
-Another interesting anchor is the last few words before a backchannel.
-We could for example choose $t$ as the center of the last speaker utterance before the backchannel, and then use $[t-0.5s, t+0.5s]$ as the training range. While experimenting this proved to be hard because without manual alignment it isn't clear what the last relevant utterance even is, and in many cases the relevant utterance ends after the backchannel happens, so we would need to be careful not to use any future data. The first approach seemed to work reasonably well, so we did not do any further experiments with the second approach.
+### Binary training areas {#sec:binary}
+
+The easiest method is to choose the beginning of the utterance in the transcript of the listener channel as an anchor $t$, and then use a fixed context range of width $w$ before that as the audio range $[t-w, t]$ to train the network to predict a backchannel. The width can range from a few hundred milliseconds to multiple seconds. We feed all the extracted features for this time range into the network at once, from which it will predict if a backchannel at time $t$ is appropriate. This approach of selecting the training area is easy because it only requires searching for all backchannel utterance timestamps and then extracting the calculated range of audio. It may not be optimal though, because the delay between the last utterance of the speaker and the backchannel can vary significantly in the training data. This means it is not guaranteed that the training range will contain the actual trigger for the backchannel, which is assumed to be the last few words said by the speaker, and even if it does the last word will not be aligned within the context. This causes the need for the network to first learn to align it's input, making training harder and slower.
+
+The second method is to use the last few words before a backchannel as the anchor in the hope of directly aligning the input so the actual trigger of the backchannel is always aligned within the training range.
+We could for example extract the center of the last speaker utterance before the backchannel ($:=t$), and then use $[t-0.5s, t+0.5s]$ as the training range. In reality this proved to be hard because without manual alignment it isn't clear what the last relevant utterance even is, and in many cases the relevant utterance ends after the backchannel happens, so we would need to be careful not to use any future data. The first approach seemed to work reasonably well, so we did not do any further experiments with the second approach.
 
 
-We also need to choose areas to predict zero i.e. “no backchannel” (NBC). The number of training samples of this kind should be about the same amount as backchannel samples so the network is not biased towards one or the other.
+In addition to selecting the _positive prediction area_ as defined above, we also need to choose areas to predict zero i.e. “no backchannel” (NBC). The number of training samples of this kind should be about the same amount as backchannel samples so the network is not biased towards one or the other.
 To create this balanced data set, we can choose the range a few seconds before each backchannel as a negative sample. This gives us an exactly balanced data set, and the negative samples are intuitively meaningful, because in that area the listener explicitly decided not to give a backchannel response yet, so it is sensible to assume whatever the speaker is saying is not a trigger for backchannels.
 
-The previous method trains the network on binary values, only 1 = 100% = "Backchannel happens here" and 0 = 0% = "Definitely no backchannel happens here.
-Another approach for choosing a training area would be to not choose two separate areas to predict binary 1 and 0 values, but to instead use a area around every actual backchannel trigger and train the network on a bell curve with the center being at the ground truth with the maximum value of 1, and lower values between 0 and 1 for later and earlier values. For example, if there is a backchannel at t=5\,s and we identify t=4.5\,s as the actual trigger time, we could train the network on output=1 for a context centered at 4.5\,s, 0.5 for 200ms earlier and later and on $v \ll 1$ for more distant times. This has the same problem as described above in that we would need to know the exact time of the event that triggered the backchannel. Testing this approach by simply using a fixed offset before the onset of the backchannel utterance gave far worse results than the binary training approach, so we discarded the idea in favor of concentrating on finding the optimal context ranges for the binary approach.
+### Gaussian training area
+
+The method of choosing the training areas described in @sec:binary assumes we train the network on binary values, with 1 = 100% = "Backchannel happens here" and 0 = 0% = "Definitely no backchannel happens here".
+Another approach for choosing a training area would be to not choose two separate areas to predict binary 1 and 0 values, but to instead use the area around every actual backchannel trigger and train the network on a bell curve with the center being at the ground truth with the maximum value of 1, and lower values between 0 and 1 for later and earlier values. For example, if there is a backchannel at $t=\SI{5}{s}$ and we identify $t=\SI{4.5}{s}$ as the actual trigger time, we could train the network on output=1 for a context centered at $\SI{4.5}{s}$ 0.5 for 200ms earlier and later and on $0 < \text{output} \ll 1$ for more distant times. This has the same problem as described above in that we would need to know the exact time of the event that triggered the backchannel. Testing this approach by simply using a fixed offset before the onset of the backchannel utterance gave far worse results than the binary training approach, so we discarded the idea in favor of concentrating on finding the optimal context ranges for the binary approach.
 
 ## Training and Neural Network Design {#sec:training}
 
-We begin with a simple feed forward network architecture. The input layer consists of
-all the chosen features over a fixed time context. With a time context of $c\,\si{ms}$ and a feature dimension of $f$, this gives us an input dimension of $f \times \floor{c \over \SI{10}{ms}}$.
+We initially used a simple feed forward network architecture. The input layer consists of
+all the chosen features over a fixed time context. With a time context of $c\,\si{ms}$ and a feature dimension of $f$, this gives us an input dimension of $f \cdot \floor{c \over \SI{10}{ms}}$.
 One or more hidden
-layers with varying numbers of neurons follow. After every layer we apply an activation function (also called a nonlinearity) like tanh or ReLU. The output layer is
+layers with varying numbers of neurons follow. After every layer we apply an activation function (also called a _nonlinearity_) like tanh or a rectifier (ReLU). 
+The output layer is
 $(n+1)$--dimensional, where n is the number of backchannel categories we
 want to predict. This layer has softmax as an activation function, which maps a $K$-dimensional vector of arbitrary values to values that are in the range $(0, 1]$ and that add up to 1, which allows us to interpret them as class probabilities.
 
@@ -183,7 +193,7 @@ We then calculate categorical cross-entropy of the output values of the network 
 
 In the simplest case (ignoring different kinds of backchannels) we train the network on the outputs $[1, 0]$ for backchannels and $[0, 1]$ for non-backchannels. When evaluating we can ignore the second dimension of this output, simply interpreting the first dimension as a probability. A visualization of this architecture can be seen in @fig:nn_2h. In the following sections we will concentrate on this architecture.
 
-\include{net1}
+\input{net1}
 
 The placement of backchannels is dependent on previous backchannels: If
 the previous backchannel utterance was a long time ago, the probability of a
@@ -196,54 +206,60 @@ Long-short term memory layers (LSTM) instead of dense feed forward layers. LSTM 
 
 Our goal is to generate an artificial audio track containing utterances such as "uh-huh" or "yeah" at appropriate times. The neural neural network gives us a noisy value between 0 and 1, which
 we interpret as the probability of a backchannel happening at the given
-time. To generate our audio track from this output, we need to convert the noisy floating value into discrete trigger timestamps. We first run a low-pass filter over the network output, which removes all the higher frequencies and gives us
+time. To generate an audio track from this output, we need to convert the noisy floating probability value into discrete trigger timestamps. We first run a low-pass filter over the network output, which removes all the higher frequencies and gives us
 a less noisy and more continuous output function. 
+
+### Low-pass filtering
 
 To ensure our predictor does not use any future information, the low-pass filter must be causal. A common low-pass filter is the gaussian blur, which folds the input function with a bell curve. This filter is symmetric, which in our case means it uses future information as well as past information. To prevent this, we cut the filter of asymmetrically for the right side (that would range in the future), with a cutoff at some multiple $c$ of the standard deviation $\sigma$. Then we shift the filter to the left so the last frame it uses is $\pm\SI{0}{ms}$ from the prediction target time. This means the latency of our prediction increases by $c\cdot\sigma\,ms$. If we choose $c=0$, we cut off the complete right half of the bell curve, meaning we do not need to shift the filter, which keeps the latency at 0 at the cost of accuracy of the low-pass filter.
 
-Another possible filter to use would be the Kalman Filter [@kalman_new_1960], which tries to predict the value of a function based on a noisy function masking the actual function. This filter has many parameters requiring tuning, so we used the described gaussian filter method.
+Another possible filter to use would be exponential smoothing, defined as $s(t) = p\cdot f(t) + (1-p)\cdot s(t-1)$, where $t$ is the current time, $f$ is the original function, $s$ is the smoothed output, and $0<p<1$ is a factor describing the weighing of the current value as opposed to the past values. Even though this has the advantage of producing no latency it performed worse than the gaussian filter even with a cutoff of $c=0$. A third possibility is the Kalman Filter [@kalman_new_1960], which generally tries to predict the value of a function based on a noisy function masking the actual function. This filter has many parameters requiring tuning, so we used the described gaussian filter method instead.
+
+### Thresholding and triggering
 
 After this filter we use a fixed trigger threshold to extract the ranges in the output where the predictor is fairly confident that a backchannel should happen. We trigger exactly once for each of these ranges.
-We have multiple possibilities to choose the trigger anchor with in each range.
+Within each range we have multiple possibilities to choose the exact trigger time point.
 
 The easiest method is to use the time of the maximum peak of every range where the value is larger than the threshold, but this requires us to wait until the value is lower than the threshold again before we can decide where the maximum is, which introduces another delay and is thus bad for live detection.
 
 Another possibility is to use the start of the range, but this can give us worse results because it might force the trigger to happen earlier than the time the network would give the highest probability rating.
 
-A compromise between the best quality and immediate decision is to use the first local maximum within the thresholded range. Because of the low-pass filter we mostly have no or few local maxima which differ from the global maximum within the given range, and it's easy to decide when the local maximum was reached by simply triggering as soon as the first derivate is $<0$.
+A compromise between the best quality and immediate decision is to use the first local maximum within the thresholded range. Because of the low-pass filter we mostly have no or few local maxima which differ from the global maximum within the given range so this should give results close to using the global maximum. We can decide when the local maximum was reached by triggering as soon as the first derivate is $<0$.
 
-When we have the trigger anchor, we can either immediately trigger, or delay the actual trigger by a fixed amount of time, which can be useful if we notice the prediction would happen to early otherwise.
+When we have the trigger anchor, we can either immediately trigger, or delay the actual trigger by a fixed amount of time, which can be useful if we notice the prediction would happen too early otherwise.
 
 An example of this postprocessing procedure can be seen in @fig:postproc.
 
+![Example of the postprocessing process. The top shows the input audio channel together with the corresponding transcriptions. The raw output of the neural network is fairly noisy, so we smooth it. The highlighted range on the smoothed output is where the value is larger than 0.6. We trigger at the first local maximum of this range, outputting a "uh-hum" sound sample.](img/postprocessing.pdf){#fig:postproc}
 
-\begin{figure}
+
+<!--\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{img/postprocessing.pdf}
-    \caption{Postprocessing example}
+    \caption{}
     \label{fig:postproc}
-\end{figure}
+\end{figure}-->
 
 
 
 
 ## Evaluation
 
+For a simple subjective evaluation, we take some random audio segments where one person is talking in a monologue. For each segment, we remove the original listener channel and replace it with the artificial one. This audio data is generated by inserting a random backchannel audio sample at every predicted timestamp. We get these audio samples from a random speaker from the training data, keeping the speaker the same over the whole segment so it sounds like a specific person is listening to the speaker.
+
 ### Objective evaluation
 
-For a simple subjective evaluation, we take a some random audio segments where one person is talking in a monologue. For each segment, we remove the original listener channel and replace it with the artificial one. This audio data is generated by inserting a random backchannel audio sample at every predicted timestamp. We get these audio samples from a random speaker from the training data, keeping the speaker the same over the whole segment so it sounds like a specific person is listening to the speaker.
-
-To get an objective evaluation of the performance of our predictions, we again take a set of
+To get an objective evaluation of the performance of our predictions, we take a set of
 monologuing segments from the evaluation data set and compare the prediction
-with the ground truth, i.e. all the timestamps where a backchannel happens in the original data.
+with the ground truth, i.e., all the timestamps where a backchannel happens in the original data.
 
-We interpret a prediction as correct if it is within a specific margin of the nearest real backchannel in the dataset. For example, with a margin of error of $[\SI{-100}{ms}, \SI{+300}{ms}]$, if the real data has a backchannel at 5.5 seconds, we say the predictor is correct if it also produces a backchannel within $[\SI{5.5}{s} - \SI{100}{ms}, \SI{5.5}{s} + \SI{300}{ms}] = [\SI{5.4}{s}, \SI{5.8}{s}]$.
+We interpret a prediction as correct if it is within a specific margin of the nearest real backchannel in the dataset. For example, with a margin of error of $[\SI{-100}{ms}, \SI{+300}{ms}]$, if the real data has a backchannel at a timestamp of 5.5 seconds from the beginning of the conversation, we say the predictor is correct if it also produces a backchannel within $[\SI{5.5}{s} - \SI{100}{ms}, \SI{5.5}{s} + \SI{300}{ms}] = [\SI{5.4}{s}, \SI{5.8}{s}]$.
 
 In other research, varying margins of error have been used. We use a margin of 0ms to +1000ms for our initial tests, and later also do our evaluation with other margins for comparison with related research.
 
-After aligning the prediction and the ground truth using the margin of error, we get two overlapping sets of timestamps. The set of predictions is called "selected elements", the set of true elements is called "relevant elements". The number of true positives is defined as $\mathit{TP} = |\mathit{selected} \cap \mathit{relevant}|$, which is all the backchannels the predictor correctly identified as such. The number of false positives is defined as $\mathit{FP} = |\mathit{selected} \setminus \mathit{relevant}|$, which is all the backchannels the predictor output that are not contained in the dataset. The number of false negatives is defined as $\mathit{FN} = |\mathit{relevant} \setminus \mathit{selected}|$, which is all the backchannels that the predictor should have found but didn't.
+After aligning the prediction and the ground truth using the margin of error, we get two overlapping sets of timestamps. The set of predictions is called "selected elements" and the set of true elements is called "relevant elements". The number of true positives is defined as $\mathit{TP} = |\mathit{selected} \cap \mathit{relevant}|$, which is all the backchannels the predictor correctly identified as such. The number of false positives is defined as $\mathit{FP} = |\mathit{selected} \setminus \mathit{relevant}|$, which is all the backchannels the predictor output that are not contained in the actual dataset. The number of false negatives is defined as $\mathit{FN} = |\mathit{relevant} \setminus \mathit{selected}|$, which is all the backchannels that the predictor should have found but didn't.
 
-With these, we can now calculate the measures _Precision_ and _Recall_ commonly used in information retrieval and binary classification:
+With these, we can now calculate the measures _Precision_ and _Recall_ as commonly used in information retrieval and binary classification:
 
 $$
 \begin{split}
@@ -252,10 +268,10 @@ $$
 \end{split}
 $$
 
-Both of these are values between 0 and 1. The _Precision_ value is the fraction of returned values that were correct, and can thus be seen as a measure of the _quality_ of a algorithm. The _Recall_ value, also known as _sensitivity_ is the fraction of relevant values that the algorithm output, thus it can be interpreted as a measure of _quantity_. Precision and Recall are in a inverse relationship, and it is usually possible to increase one of them while reducing the other by tweaking parameters of the algorithm. Recall can be easily maximized to 100% by simply returning true for every given timestamp. Precision can be maximized by never outputting anything, causing every predicted value to be correct. To solve this problem, we use the normalized harmonic mean of precision and recall, also known as the F1-Score or F-Measure:
+Both of these are values between 0 and 1. The _Precision_ value is the fraction of returned values that were correct, and can thus be seen as a measure of the _quality_ of a algorithm. The _Recall_ value, also known as _Sensitivity_ is the fraction of relevant values that the algorithm output, thus it can be interpreted as a measure of _quantity_. Precision and Recall are in a inverse relationship, and it is usually possible to increase one of them while reducing the other by tweaking parameters of the algorithm. Recall can be easily maximized to 100% by simply returning true for every given timestamp. <!--Precision can be maximized by never outputting anything, causing every predicted value to be correct. -->To solve this problem and to introduce a single scalar for measuring the performance, we use the normalized harmonic mean of precision and recall, also known as the F1-Score or F-Measure:
 
 $$
-\mathit{F1\,Score} = 2 \cdot \frac{1}{\frac{1}{\mathit{Recall}} + \frac{1}{\mathit{Precision}}}
+\text{F1\,Score} = 2 \cdot \frac{1}{\frac{1}{\mathit{Recall}} + \frac{1}{\mathit{Precision}}}
     = 2 \cdot \frac{\mathit{Precision}\cdot\mathit{Recall}}{\mathit{Precision}+\mathit{Recall}}
 $$
 
@@ -402,7 +418,7 @@ words (2.21%). Note that the percentage of words is much lower because backchann
 
 #### Acoustic features
 
-We used the Janus Recognition Toolkit [@levin_janus-iii_2000] for the acoustic feature extraction (power, pitch tracking, FFV, MFCC).
+We used the Janus Recognition Toolkit [@levin_janus-iii_2000] for the acoustic feature extraction (power, pitch tracking, FFV, MFCC). The power value used is the base-10 logarithm of the raw `adc2pow` value output by the Janus Recognition Toolkit (JRTk). The pitch value is the raw value output by the Janus pitch tracker. All features are normalized so they fit in the range of $[-1, 1]$.
 
 These features are extracted for 32ms frame windows, with a frame shift of 10ms. This gives us 100 frames per feature per second.
 
