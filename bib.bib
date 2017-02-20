@@ -1,8 +1,24 @@
 
-@article{dieleman_lasagne:_2015,
+@article{waibel_phoneme_1989,
+  title = {Phoneme Recognition Using Time-Delay Neural Networks},
+  volume = {37},
+  issn = {0096-3518},
+  doi = {10.1109/29.21701},
+  abstract = {The authors present a time-delay neural network (TDNN) approach to phoneme recognition which is characterized by two important properties: (1) using a three-layer arrangement of simple computing units, a hierarchy can be constructed that allows for the formation of arbitrary nonlinear decision surfaces, which the TDNN learns automatically using error backpropagation; and (2) the time-delay arrangement enables the network to discover acoustic-phonetic features and the temporal relationships between them independently of position in time and therefore not blurred by temporal shifts in the input. As a recognition task, the speaker-dependent recognition of the phonemes B, D, and G in varying phonetic contexts was chosen. For comparison, several discrete hidden Markov models (HMM) were trained to perform the same task. Performance evaluation over 1946 testing tokens from three speakers showed that the TDNN achieves a recognition rate of 98.5\% correct while the rate obtained by the best of the HMMs was only 93.7\%},
+  timestamp = {2017-02-20T22:17:50Z},
+  number = {3},
+  journal = {IEEE Transactions on Acoustics, Speech, and Signal Processing},
+  author = {Waibel, A. and Hanazawa, T. and Hinton, G. and Shikano, K. and Lang, K. J.},
+  month = mar,
+  year = {1989},
+  keywords = {Acoustic testing,Backpropagation,Character recognition,Computer networks,Computer science,computing units,error backpropagation,Hidden Markov models,Loudspeakers,neural nets,neural networks,nonlinear decision surfaces,phoneme recognition,Psychology,Speech,speech recognition,temporal shifts,testing tokens,three-layer,time-delay neural networks},
+  pages = {328--339},
+  file = {IEEE Xplore Abstract Record:/home/tehdog/.zotero/zotero/h74c1nl7.default/zotero/storage/S9ETHET8/21701.html:text/html}
+}
+
+@misc{dieleman_lasagne:_2015,
   title = {Lasagne: {{First}} Release.},
-  doi = {10.5281/zenodo.27878},
-  timestamp = {2017-02-07T15:51:26Z},
+  timestamp = {2017-02-20T21:34:08Z},
   author = {Dieleman, Sander and Schl{\"u}ter, Jan and Raffel, Colin and Olson, Eben and S{\o}nderby, S{\o}ren Kaae and {others}},
   month = aug,
   year = {2015},
@@ -22,25 +38,28 @@
   primaryclass = {cs.SC}
 }
 
-@article{jurafsky_switchboard_1997,
+@misc{jurafsky_switchboard_1997,
   title = {Switchboard Discourse Language Modeling Project},
-  timestamp = {2017-02-07T15:51:27Z},
+  timestamp = {2017-02-20T21:38:00Z},
+  howpublished = {\url{http://compprag.christopherpotts.net/swda.html}},
   author = {Jurafsky, Daniel and Van Ess-Dykema, Carol and {others}},
   year = {1997},
   groups = {other}
 }
 
-@article{godfrey_switchboard-1_1993,
+@misc{godfrey_switchboard-1_1993,
   title = {Switchboard-1 {{Release}} 2},
-  timestamp = {2017-02-07T15:51:27Z},
+  timestamp = {2017-02-20T21:35:39Z},
+  howpublished = {\url{https://catalog.ldc.upenn.edu/ldc97s62}},
   author = {Godfrey, John and Holliman, Edward},
   year = {1993},
   groups = {other}
 }
 
-@article{harkins_isip_2003,
+@misc{harkins_isip_2003,
   title = {{{ISIP Switchboard}} Word Alignments},
-  timestamp = {2017-02-07T15:51:27Z},
+  timestamp = {2017-02-20T21:35:13Z},
+  howpublished = {\url{https://www.isip.piconepress.com/projects/switchboard/}},
   author = {Harkins, Dan and {others}},
   year = {2003},
   groups = {other}
@@ -151,27 +170,20 @@
   groups = {other}
 }
 
-@article{swbalign,
-  title = {{{ISIP Switchboard}} Word Alignments},
-  timestamp = {2017-02-20T14:17:42Z},
-  author = {Harkins, Dan and {others}},
-  year = {2003}
-}
-
 @article{gers_learning_2003,
   title = {Learning {{Precise Timing}} with {{Lstm Recurrent Networks}}},
   volume = {3},
   issn = {1532-4435},
   doi = {10.1162/153244303768966139},
   abstract = {The temporal distance between events conveys information essential for numerous sequential tasks such as motor control and rhythm detection. While Hidden Markov Models tend to ignore this information, recurrent neural networks (RNNs) can in principle learn to make use of it. We focus on Long Short-Term Memory (LSTM) because it has been shown to outperform other RNNs on tasks involving long time lags. We find that LSTM augmented by "peephole connections" from its internal cells to its multiplicative gates can learn the fine distinction between sequences of spikes spaced either 50 or 49 time steps apart without the help of any short training exemplars. Without external resets or teacher forcing, our LSTM variant also learns to generate stable streams of precisely timed spikes and other highly nonlinear periodic patterns. This makes LSTM a promising approach for tasks that require the accurate measurement or generation of time intervals.},
-  timestamp = {2017-02-20T19:56:46Z},
+  timestamp = {2017-02-20T20:11:55Z},
   urldate = {2017-02-20},
   journal = {J. Mach. Learn. Res.},
   author = {Gers, Felix A. and Schraudolph, Nicol N. and Schmidhuber, J{\"u}rgen},
-  month = mar,
   year = {2003},
   keywords = {long short-term memory,recurrent neural networks,Timing},
-  pages = {115--143}
+  pages = {115--143},
+  groups = {other}
 }
 
 @article{ward_prosodic_2000,
@@ -325,8 +337,9 @@
   volume = {20},
   doi = {10.1527/tjsai.20.220},
   abstract = {If a dialog system can respond to the user as reasonably as a human, the interaction will become smoother. Timing of the response such as back-channels and turn-taking plays an important role in such a smooth dialog as in human-human interaction.  We developed a response timing generator for such a dialog system. This generator uses a decision tree to detect the timing based on the features coming from some prosodic and linguistic information. The timing generator decides the action of the system at every 100 ms during the user's pause. In this paper, we describe a robust spoken dialog system using the timing generator. Subjective evaluation proved that almost all of the subjects experienced a friendly feeling from the system.},
-  timestamp = {2017-02-08T15:17:18Z},
+  timestamp = {2017-02-20T21:36:37Z},
   number = {3},
+  journal = {Transactions of the Japanese Society for Artificial Intelligence},
   author = {Kitaoka, N. and Takeuchi, M. and R, Nishimura and S, Nakagawa},
   year = {2005},
   pages = {220--228},
@@ -529,10 +542,11 @@
   doi = {10.1007/978-3-319-20916-6_31}
 }
 
-@article{truong_rule-based_2010,
+@inproceedings{truong_rule-based_2010,
   title = {A Rule-Based Backchannel Prediction Model Using Pitch and Pause Information},
-  timestamp = {2017-02-08T11:28:48Z},
+  timestamp = {2017-02-20T21:30:15Z},
   urldate = {2017-02-08},
+  booktitle = {Proceedings of {{Interspeech}} 2010},
   author = {Truong, Khiet P. and Poppe, R. W. and Heylen, D. K. J.},
   year = {2010},
   file = {[PDF] utwente.nl:/home/tehdog/.zotero/zotero/h74c1nl7.default/zotero/storage/N9ZFJEU2/Truong et al. - 2010 - A rule-based backchannel prediction model using pi.pdf:application/pdf;Snapshot:/home/tehdog/.zotero/zotero/h74c1nl7.default/zotero/storage/ZH87FDCB/18627.html:text/html},
@@ -552,10 +566,11 @@
   groups = {other bc}
 }
 
-@article{de_kok_survey_2012,
+@inproceedings{de_kok_survey_2012,
   title = {A Survey on Evaluation Metrics for Backchannel Prediction Models},
-  timestamp = {2017-02-20T14:36:25Z},
+  timestamp = {2017-02-20T20:46:25Z},
   urldate = {2017-02-08},
+  booktitle = {Proceedings of the {{Interdisciplinary Workshop}} on {{Feedback Behaviors}} in {{Dialog}}},
   author = {{de Kok}, Iwan and Heylen, D. K. J.},
   year = {2012},
   file = {[PDF] utwente.nl:/home/tehdog/.zotero/zotero/h74c1nl7.default/zotero/storage/2FVX3NT6/de Kok and Heylen - 2012 - A survey on evaluation metrics for backchannel pre.pdf:application/pdf;Snapshot:/home/tehdog/.zotero/zotero/h74c1nl7.default/zotero/storage/9U38REJ8/22780.html:text/html},

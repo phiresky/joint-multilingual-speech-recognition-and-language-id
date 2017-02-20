@@ -4,6 +4,7 @@ author:
 - 'Robin'
 bibliography:
 - 'bib.bib'
+lang: en-US
 title: |
     Backchannel Prediction for Conversational Speech Using Recurrent Neural
     Networks
@@ -37,7 +38,7 @@ Most related work is either completely rule-based or uses at least some manual c
 > - continuing for at least 110 milliseconds,
 > - coming after at least 700 milliseconds of speech,
 > - providing you have not output back-channel feedback within the preceding 800 milliseconds,
-> - after 700ms wait,
+> - after \SI{700}{ms} wait,
 >
 > you should produce back-channel feedback." [@ward_prosodic_2000]
 
@@ -65,7 +66,7 @@ Collection:
     - Method: HMM for pitch contour
     - 
     - Evaluation Method: 
-    - Margin of Error: (-100ms, +300ms) from target utterance end (?)
+    - Margin of Error: (-\SI{100}{ms}, +\SI{300}{ms}) from target utterance end (?)
 - @ward_using_1996
     - Japanese
 - @noguchi_prosody-based_1998
@@ -177,7 +178,7 @@ To create this balanced data set, we can choose the range a few seconds before e
 ### Gaussian training area
 
 The method of choosing the training areas described in @sec:binary assumes we train the network on binary values, with 1 = 100% = "Backchannel happens here" and 0 = 0% = "Definitely no backchannel happens here".
-Another approach for choosing a training area would be to not choose two separate areas to predict binary 1 and 0 values, but to instead use the area around every actual backchannel trigger and train the network on a bell curve with the center being at the ground truth with the maximum value of 1, and lower values between 0 and 1 for later and earlier values. For example, if there is a backchannel at $t=\SI{5}{s}$ and we identify $t=\SI{4.5}{s}$ as the actual trigger time, we could train the network on output=1 for a context centered at $\SI{4.5}{s}$ 0.5 for 200ms earlier and later and on $0 < \text{output} \ll 1$ for more distant times. This has the same problem as described above in that we would need to know the exact time of the event that triggered the backchannel. Testing this approach by simply using a fixed offset before the onset of the backchannel utterance gave far worse results than the binary training approach, so we discarded the idea in favor of concentrating on finding the optimal context ranges for the binary approach.
+Another approach for choosing a training area would be to not choose two separate areas to predict binary 1 and 0 values, but to instead use the area around every actual backchannel trigger and train the network on a bell curve with the center being at the ground truth with the maximum value of 1, and lower values between 0 and 1 for later and earlier values. For example, if there is a backchannel at $t=\SI{5}{s}$ and we identify $t=\SI{4.5}{s}$ as the actual trigger time, we could train the network on output=1 for a context centered at $\SI{4.5}{s}$ 0.5 for \SI{200}{ms} earlier and later and on $0 < \text{output} \ll 1$ for more distant times. This has the same problem as described above in that we would need to know the exact time of the event that triggered the backchannel. Testing this approach by simply using a fixed offset before the onset of the backchannel utterance gave far worse results than the binary training approach, so we discarded the idea in favor of concentrating on finding the optimal context ranges for the binary approach.
 
 ## Training and Neural Network Design {#sec:training}
 
@@ -255,7 +256,7 @@ with the ground truth, i.e., all the timestamps where a backchannel happens in t
 
 We interpret a prediction as correct if it is within a specific margin of the nearest real backchannel in the dataset. For example, with a margin of error of $[\SI{-100}{ms}, \SI{+300}{ms}]$, if the real data has a backchannel at a timestamp of 5.5 seconds from the beginning of the conversation, we say the predictor is correct if it also produces a backchannel within $[\SI{5.5}{s} - \SI{100}{ms}, \SI{5.5}{s} + \SI{300}{ms}] = [\SI{5.4}{s}, \SI{5.8}{s}]$.
 
-In other research, varying margins of error have been used. We use a margin of 0ms to +1000ms for our initial tests, and later also do our evaluation with other margins for comparison with related research.
+In other research, varying margins of error have been used. We use a margin of \SI{0}{ms} to $+1000\,\si{ms}$ for our initial tests, and later also do our evaluation with other margins for comparison with related research.
 
 After aligning the prediction and the ground truth using the margin of error, we get two overlapping sets of timestamps. The set of predictions is called "selected elements" and the set of true elements is called "relevant elements". The number of true positives is defined as $\mathit{TP} = |\mathit{selected} \cap \mathit{relevant}|$, which is all the backchannels the predictor correctly identified as such. The number of false positives is defined as $\mathit{FP} = |\mathit{selected} \setminus \mathit{relevant}|$, which is all the backchannels the predictor output that are not contained in the actual dataset. The number of false negatives is defined as $\mathit{FN} = |\mathit{relevant} \setminus \mathit{selected}|$, which is all the backchannels that the predictor should have found but didn't.
 
@@ -299,7 +300,7 @@ Secondly, we asked humans to rate the output of the machine predictions on a sca
 We used the switchboard dataset [@godfrey_switchboard-1_1993] which consists of 2438 english
 telephone conversations of five to ten minutes, 260 hours in total.
 Pairs of participants from across the United States were encouraged to talk about a specific topic selected from 70 possibilities. Conversation partners and topics were selected so two people would only talk once with each other and every person would only discuss a specific topic once.
-These telephone conversations are annotated with transcriptions and word alignments \cite{swbalign} with a total of 390k utterances or 3.3 million words. The audio data is given as stereo files, where the first speaker is on the left channel and the second speaker on the right channel. We split the dataset randomly into 2000 conversations for training, 200 for validation and 238 for evaluation. As opposed to many other datasets, the transcriptions also contain backchannel utterances like _uh-huh_ and _yeah_, making it ideal for this task.
+These telephone conversations are annotated with transcriptions and word alignments [@harkins_isip_2003] with a total of 390k utterances or 3.3 million words. The audio data is given as stereo files, where the first speaker is on the left channel and the second speaker on the right channel. We split the dataset randomly into 2000 conversations for training, 200 for validation and 238 for evaluation. As opposed to many other datasets, the transcriptions also contain backchannel utterances like _uh-huh_ and _yeah_, making it ideal for this task.
 
 The transcriptions are split into _utterances_, which are multiple words grouped by speech structure, for example (slashes indicate utterance boundaries): "did you want me to go ahead / okay well one thing i- i- i guess both of us have very much aware of the equality / uh it seems like women are uh just starting to really get some kind of equality not only in uh jobs but in the home where husbands are starting to help out a lot more than they ever did um". The length of these utterances varies in length from one word to whole sentences. Each of them has a start time and stop time attached, where the stop time of one utterance is always the same as the start time of the next utterance. For longer periods of silence, an utterance containing the text  "[silence]" is between them.
 
@@ -320,9 +321,7 @@ Switchboard corpus. An excerpt of the most common categories can be seen in @tbl
 
 \begin{figure}
 \centering
-\caption{Most common categories from the SwDA Corpus}
 \begin{tabular}{cp{3cm}cp{4cm}r}
-
     \hline\noalign{\smallskip}
 
     ~ & name & act\_tag & example & full\_count \\
@@ -338,8 +337,9 @@ Switchboard corpus. An excerpt of the most common categories can be seen in @tbl
     7 & Yes-No-Question & qy & Do you have to have any special training? &  4727\tabularnewline
 
     \noalign{\smallskip}\hline\noalign{\smallskip}
-    \end{tabular}
-    \label{tbl:swda}
+\end{tabular}
+\caption{Most common categories from the SwDA Corpus}
+\label{tbl:swda}
 \end{figure}
 
 We extracted all utterances containing one of the tags beginning with "b" (which stands for backchannels or backchannel-like utterances), and counted their frequency. Because the dataset also marks some longer utterances as backchannels, we only use those that are at most three words long to exclude the ones that transmit a lot of additional information to the speaker.
@@ -348,7 +348,6 @@ We chose to use the top 150 unique utterances from this set. For the most common
 
 \begin{figure}
 \centering
-\caption{Most common backchannel utterances in the SwDA dataset. bk = Response Acknowledgement, bh = Backchannel in question form, ba = Appreciation.}
     \begin{tabular}{rrrll}
     \hline\noalign{\smallskip}
     aggregated & self & count & category & text \\
@@ -373,7 +372,8 @@ We chose to use the top 150 unique utterances from this set. For the most common
     84.6\% & 0.4\% & 186 & b & really \\
     85.0\% & 0.4\% & 177 & bk & oh \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
-    \end{tabular}\label{tbl:bcs}
+    \end{tabular}
+    \caption{Most common backchannel utterances in the SwDA dataset. bk = Response Acknowledgement, bh = Backchannel in question form, ba = Appreciation.}\label{tbl:bcs}
 \end{figure}
 
 
@@ -443,9 +443,9 @@ We extracted these features parallel to those output by Janus, with a 10 millise
 We extract the features for a fixed time context. Then we use a subset of that range as the area we feed into the network. 
 As an example, we could extract the range $[\SI{-2000}{ms}, \SI{0}{ms}]$ for every feature, giving us 200 frames. To train the network on \SI{1500}{ms} of context, we would treat every offset like $[\SI{-2000}{ms},\allowbreak \SI{-500}{ms}],\allowbreak [\SI{-1990}{ms},\allowbreak \SI{-490}{ms}], \dots,\allowbreak [\SI{-1500}{ms}, \SI{0}{ms}]$ as individual training samples. This would give us 50 training samples per backchannel utterance, greatly increasing the amount of training data, but introducing smear as the network needs to learn to handle a larger variance in when the backchannel cue appears in its inputs, and thus reducing the confidence of its output.
 
-This turned out to not work very well, so in the end we settled on only extracting the features for the range $[-w - \SI{10}{ms}, \SI{0}{ms}]$ where $w$ is the context width, and training the network on $[-w - \Si{10}{ms},\allowbreak \SI{10}{ms}]$ and $[-w, \SI{0}{ms}]$. This gives us two training samples per utterance, reduces the smearing problem and at the same time forces the network to learn to correctly handle when its inputs are the same or similar but offset by one.
+This turned out to not work very well, so in the end we settled on only extracting the features for the range $[-w - \SI{10}{ms}, \SI{0}{ms}]$ where $w$ is the context width, and training the network on $[-w - \SI{10}{ms},\allowbreak \SI{10}{ms}]$ and $[-w, \SI{0}{ms}]$. This gives us two training samples per utterance, reduces the smearing problem and at the same time forces the network to learn to correctly handle when its inputs are the same or similar but offset by one.
 
-We can also choose to only use every n-th timestep, which we call the "context stride". This works under the assumption that the input features don't change with a high frequency, which greatly reduces the input dimension and speeds up training. In practice a stride of 2 worked well, meaning one frame every 20 milliseconds. This works great in combination with the above. For example, with a stride of 2 and a context size of 100ms, we would now get these two training samples (described as frame indices relative to the onset of the backchannel utterance):
+We can also choose to only use every n-th timestep, which we call the "context stride". This works under the assumption that the input features don't change with a high frequency, which greatly reduces the input dimension and speeds up training. In practice a stride of 2 worked well, meaning one frame every 20 milliseconds. This works great in combination with the above. For example, with a stride of 2 and a context size of \SI{100}{ms}, we would now get these two training samples (described as frame indices relative to the onset of the backchannel utterance):
 
 1. [-10, -8, -6, -4, -2, 0]
 2. [-11, -9, -7, -5, -3, -1]
@@ -464,17 +464,19 @@ In general, we used three variables to monitor training: The first is training l
 
 We train the network in epochs of minibatches. A minibatch is a set of $N$ training samples that we feed into the network at once, updating the weights with their average loss. This means we only update the gradient every $N$ training samples, which reduces the probability of a single huge gradient disturbing training. We used a minibatch size of $N=250$ training samples. One epoch is defined as one whole backward pass of all the training data through the network.
 
-We started with a simple model with a configuration of pitch and power as input and 800 ms of context, giving us $80\cdot 2 = 160$ input dimensions, hidden layers of 100 $\rightarrow$ 50 feed forward neurons. We trained this using many different gradient descent methods such as stochastic gradient descent (SGD), SGD with momentum, Nesterov momentum, Adadelta and Adam, each with fixed learning rates to start. The momentum methods add a speed variable to the descent. This can be interpreted similar to its physical name giver. Imagine a ball rolling down a mountain slope, for each time period, it keeps it's previous momentum and is thus able to jump over small dents in the ground (local minima). In our case, momentum worsened the results, so we stayed with SGD and Adam. 
+We started with a simple model with a configuration of pitch and power as input and \SI{800}{ms} of context, giving us $80\cdot 2 = 160$ input dimensions, hidden layers of 100 $\rightarrow$ 50 feed forward neurons. We trained this using many different gradient descent methods such as stochastic gradient descent (SGD), SGD with momentum, Nesterov momentum, Adadelta and Adam, each with fixed learning rates to start. The momentum methods add a speed variable to the descent. This can be interpreted similar to its physical name giver. Imagine a ball rolling down a mountain slope, for each time period, it keeps it's previous momentum and is thus able to jump over small dents in the ground (local minima). In our case, momentum worsened the results, so we stayed with SGD and Adam. 
 
 We tried different weight initialization methods. Initializing all weights with zero gave significantly worse results than random initialization, so we stayed with the Lasagne default of Glorot uniform initialization, which uses uniformly distributed random values, with the maximum value scaled so it makes statistical sense with the used layer dimension [@glorot_understanding_2010]. Another method to use would be layer-wise denoising autoencoder pretraining. With this method, the initial weights are created by training the layers individually to reproduce the input data with some dropout. The first layer is trained on its own, the second layer is trained with the first layer before it but fixed and so on. We did not try this, but it might give good results for this use case, especially for deeper networks with vanishing gradients.
 
-We compared online prediction and offline "prediction", where offline prediction got 400 ms of past audio and 400 ms of future audio from the onset of the backchannel utterance, and online prediction got 800 ms of past audio. Offline prediction gave 18% better results, but of course we are more interested in online prediction.
+We compared online prediction and offline "prediction", where offline prediction got \SI{400}{ms} of past audio and \SI{400}{ms} of future audio from the onset of the backchannel utterance, and online prediction got \SI{800}{ms} of past audio. Offline prediction gave 18% better results, but of course we are more interested in online prediction.
 
-The first simple LSTM we tested by simply replacing the feed forward layers with LSTM layers immediately improved the results by 16% without any further adjustments. We cept the default configuration of using "Peepholes" [@gers_learning_2003] But this showed the issues with a fixed learning rate, as the gradient regularily exploded after every 10 - 15 epochs, as can be seen in @fig:exploding. When adding FFV, increasing the input dimension per time frame from 2 to 9, SGD stopped working at all without manually tuning the learning rate. One solution to this would be to use a scheduler. A scheduler automatically adjusts the learning rate depending on some condition. One example is simple exponential decay, which exponentially decreases the initial learning rate with a fixed factor. Another method is newbob scheduling, which exponentially decreases the learning rate when the validation error stops decreasing or only decreases very little. These schedulers need parameter tuning, making them hard to use without experimenting more.
+## Recurrent neural networks
 
-![Exploding gradient while training a LSTM network. Shown is the training loss over epochs](img/20170208233441.png){#fig:exploding}
+The first LSTM we tested by simply replacing the feed forward layers with LSTM layers immediately improved the results by 16% without any further adjustments. We kept the default configuration of using "Peepholes" [@gers_learning_2003] and used only forward facing layers (connections from past to future). But this showed the issues with a fixed learning rate, as the gradient regularily exploded after every 10 to 15 epochs, as can be seen in @fig:exploding. When adding FFV, increasing the input dimension per time frame from 2 to 9, SGD stopped working at all (everything became NaN) without manually tuning the learning rate. One solution to this would be to use a scheduler. A scheduler automatically adjusts the learning rate depending on some condition. An example is simple exponential decay, which exponentially decreases the initial learning rate with a fixed factor. Another method is newbob scheduling, which exponentially decreases the learning rate when the validation error stops decreasing or only decreases very little. These schedulers need parameter tuning, making them hard to use without a lot of experimenting.
 
-We solved the problem of automatically adjusting the learning rate by using Adam [@kingma_adam:_2014] instead of SGD, which is a gradient descent method related to Adadelta and Adagrad which also incorporates momentum in some way and intelligently adjusts the learning rate. No one really understands how this works, but Adam with a fixed learning rate of 0.001 worked great for us, so we did all further testing using Adam.
+![Exploding gradient while training an LSTM network. Shown is the training loss over epochs.](img/20170208233441.png){#fig:exploding}
+
+We solved the problem of automatically adjusting the learning rate by using Adam [@kingma_adam:_2014] instead of SGD, which is a gradient descent method related to Adadelta and Adagrad which also incorporates momentum in some way and intelligently adjusts the learning rate. I have no idea how this works, but Adam with a fixed learning rate of 0.001 worked great for us, so we did all further testing using Adam.
 
 <!--![The Adam method for stochastic optimization. I have no idea what any of those letters mean, but it's been cited a bazillion times and works great.](img/adam.png){#fig:adam}-->
 
@@ -482,11 +484,11 @@ We solved the problem of automatically adjusting the learning rate by using Adam
 The LSTM networks we tested were prone to overfitting very quickly, but they still
 provided better results after two to three epochs than normal feed forward networks after 100 epochs. Overfitting happens when the results still improve on the training data set, but plateau or get worse on the validation data set. This means the network is starting to learn specific quirks in the training data set by heart, which it then can't apply on other data.
 
-We tried two regularization methods to reduce overfitting.
+We tried two regularization methods to reduce overfitting:
 
-We tried adding dropout layers to the networks to try and avoid overfitting and to generally improve the results. Dropout layers randomly disconnect a specified fraction of neurons in a layer, different for every training batch. This should in theory help the network interpret it's inputs even when it is partially "blind". For validation the dropout is deactivated, so the network is able to take advantage of every single feature when actually using it as a predictor. In this case, we tried adding different dropout settings such as "input (20% dropout) $\rightarrow$ 125 neurons (50% dropout) $\rightarrow$ 80 neurons (50% dropout) $\rightarrow$ output" but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
+At first we added dropout layers to the networks to try and avoid overfitting and to generally improve the results. Dropout layers randomly disconnect a specified fraction of neurons in a layer, different for every training batch. This should in theory help the network interpret it's inputs even when it is partially "blind", reducing the effective input dimension and thus reducing overfitting. For validation and evaluation the dropout is deactivated, so the network is able to take advantage of every single feature when actually using it as a predictor. In this case, we tried adding different dropout settings such as "input (20% dropout) $\rightarrow$ 125 neurons (50% dropout) $\rightarrow$ 80 neurons (50% dropout) $\rightarrow$ output" but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
 
-The solution that worked was L2-Regularization, which reduced the overfitting problem greatly and slightly improved the
+The solution that worked was L2-Regularization with a factor of $0.0001$. L2-Regularization places a penalty on increasing complexity of the learned model by adding the sum of the squares of the weights to the loss function. This reduced the overfitting problem greatly and slightly improved the
 results, as can be seen in the example in @fig:l2reg.
 
 ![The same LSTM network trained without (left) and with (right) L2-Regularization. Note that without regularization the network starts overfitting after two epochs. With regularization training and validation loss mostly stay the same with regularization, and the validation error continues to improve. Training loss is blue, validation loss is red and validation error is orange. The y-axis is scaled the same for both graphs.](img/20170209000001.png){#fig:l2reg}
@@ -495,11 +497,11 @@ results, as can be seen in the example in @fig:l2reg.
 
 Everything above assumes we only predict two categories: Non-BC and BC. To extend this to multiple categories, we can use the same output layer setup with more dimensions, because softmax works for any number of categories. 
 
-We manually separated the the data into the categories neutral, question, surprise/negative, affirmative, positive. This gives us six outputs including the Non-BC output, with the distribution shown in @tbl:catcounts.
+We manually separated the data into the categories neutral, question, surprise/negative, affirmative, positive. This gives us six outputs including the Non-BC output, with the distribution shown in @tbl:catcounts.
 
 \begin{figure}
 \centering
-\caption{Number of instances in the training data set per category}\label{tbl:catcounts}
+
     \begin{tabular}{cr}
     \hline\noalign{\smallskip}
     Category & sample count \\
@@ -512,22 +514,18 @@ We manually separated the the data into the categories neutral, question, surpri
     surprise/negative & 3140 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
+    \caption{Number of instances in the training data set per category}\label{tbl:catcounts}
 \end{figure}
 
-To decide whether to trigger we first check if $(1-\text{output}_{NBC}(t))$ is larger than a threshold, where NBC is the output for the category indicating no backchannel should happen. Then we use argmax(output(t)) to decide which backchannel category was predicted.
+To decide whether to trigger we first check if $(1-\textit{output}_{\text{NBC}}(t))$ is larger than a threshold, where NBC is the output for the category indicating no backchannel should happen. Then we use argmax(output(t)) to decide which backchannel category was predicted.
 
-With this method, the number of training samples for the categories vary, and the NBC category has as many samples as the other categories together. To balance this data, we can weigh the gradient update for each training sample by $w(sample) = max(counts) / counts(category(sample))$, where $counts(category)$ is the total number of training samples for a specific category. This means that the training samples with categories that have few samples are more important for training than the more common categories.
+With this method, the number of training samples for the categories vary, and the NBC category has as many samples as the other categories together. To balance this data, we can weigh the gradient update for each training sample by $w(\textit{sample}) = \max(\textit{counts}) / \textit{counts}(\textit{category}(\textit{sample}))$, where $\textit{counts}(\textit{category})$ is the total number of training samples for a specific category. This means that the training samples with categories that have few samples are more important for training than the more common categories. Alternatively, we can simply duplicate samples from the minority categories until the categories are balanced. Both methods produced similar results.
 
-For training, the simplest method is to just train the whole network on the ground truth for the categories. But because the data is limited, this might not give the best results. Another method is to first train the network on just NBC and BC, then fixing all the layers except the output layer and just fine-tuning the output layer to output multiple categories.
+For training, the simplest method is to just train the whole network on the ground truth for the categories. But because the data is limited, this might not give the best results. Another method is to first train the network on just NBC and BC detecting, then fixing all the layers except the output layer and just fine-tuning the output layer to output multiple categories.
 
 The results for a network trained on a binary output with the last layer finetuned on multicategorical output can be seen in @fig:grayscale.
 
 ![The output of a neural network trying to predict backchannel categories for a audio segment. The first category is "No Backchannel", so it is roughly inverse to the other categories (neutral, question, surprised, positive, affirmative). From top to bottom: Audio, Text, Raw NN output, Smoothed NN output. White means higher probabilities, black means lower probabilities.](img/20170211151523.png){#fig:grayscale}
-
-For evaluation, we printed out the confusion matrix.
-
-Even though the dataset was balanced, in evaluation the network still tended to be biased towards some categories.
-
 
 ## Evaluation {#eval-1}
 
@@ -538,36 +536,35 @@ utterances that are backchannels or silence) and `is_talking`
 (`= not is_listening`). An example of this can be seen in @fig:listening. A monologuing segment is the maximum possible
 time range in which one person is consistently talking and the other
 only listening. We only consider such segments of a minimum length of five seconds to exclude sections of alternating conversation.
-The results did not significantly change when adjusting this minimum length between two and ten seconds, though the amount of evaluation data and thus the accuracy of the evaluation values changed.
+The results did not significantly change when adjusting this minimum length between two and ten seconds, though the amount of evaluation data and thus the accuracy of the evaluation values changed (see @fig:varymonologuing).
 
-![A short audio segment showing talking and listening areas. Note that a backchannel from Speaker B in the middle ("yeah") does not classify that area as speaking. At the end both people talk at the same time, so speaker B needs to repeat herself.](img/20170211153622.png){#fig:listening}
+![A short audio segment showing the automatically classified talking and listening areas. Note that a backchannel from Speaker B in the middle ("yeah") does not classify that area as speaking. At the end both people talk at the same time, so speaker B needs to repeat herself.](img/20170211153622.png){#fig:listening}
 
-An interesting aspect is that in our tests the predictors had difficulty distinguishing segments of speech that indicate a backchannel and those that indicate a turn taking (speaker change). Subjectively, this makes sense because in many cases a backchannel can be seen as a replacement for starting to talk more extensively.
+An interesting aspect is that in our tests the predictors had difficulty distinguishing segments of speech that indicate a backchannel and those that indicate a turn taking (speaker change). Subjectively this makes sense, because in many cases a backchannel can be seen as a replacement for starting to talk more extensively.
 
 # Results
 
 ## Binary output
 
-We use "$70 : 35$" to denote a network layer configuration of $\text{input} \rightarrow 70\text{ neurons} \rightarrow 35\text{ neurons} \rightarrow \text{output}$.
-All results in \autoref{fig:survey} use the following setup if not otherwise stated: LSTM, configuration: $(70 : 35)$, input features: power, pitch, FFV, context frame stride: 2, margin of error: 0\,ms to +1000\,ms. Precision, recall and F1-Score are given for the validation data set.
+We use "$70 : 35$" to denote a network layer configuration of "$\text{input} \rightarrow 70\text{ neurons} \rightarrow 35\text{ neurons} \rightarrow \text{output}$".
+All results in \autoref{fig:survey} use the following setup if not otherwise stated: LSTM, configuration: $(70 : 35)$, input features: power, pitch, FFV, context frame stride: 2, margin of error: $0\,\si{ms}$ to $+1000\,\si{ms}$. Precision, recall and F1-Score are given for the validation data set.
 
 
-We tested different context widths. A context width of $n\,\si{ms}$ means we use the range $[-n\,\si{ms},\allowbreak 0\,\si{ms}]$ from the beginning of the backchannel utterance. The results improved significantly when increasing the context width from our initial value of 500\,ms. Performance peaked with a context of about 1500\,ms, as can be seen in Figure \ref{varycontext}. Longer contexts tended to cause the predictor to trigger too late.
+We tested different context widths. A context width of $n\,\si{ms}$ means we use the range $[-n\,\si{ms},\allowbreak 0\,\si{ms}]$ from the beginning of the backchannel utterance. The results improved significantly when increasing the context width from our initial value of $\SI{500}{ms}$. Performance peaked with a context of about $\SI{1500}{ms}$, as can be seen in @fig:varycontext. Longer contexts tended to cause the predictor to trigger too late.
 
 
-We tested using only every n-th frame of input data. Even though we initially did this for performance reasons, we noticed that training on every single frame has worse performance than skipping every second frame due to overfitting. Taking every fourth frame seems to miss too much information, so performance peaks at a context stride of 2, as can be seen in Figure \ref{varystrides}.
+We tested using only every n-th frame of input data. Even though we initially did this for performance reasons, we noticed that training on every single frame has worse performance than skipping every second frame due to overfitting. Taking every fourth frame seems to miss too much information, so performance peaks at a context stride of 2, as can be seen in @fig:varystrides.
 
-We tested different combinations of features. Using FFV as the only prosodic feature performs worse than FFV together with the absolute pitch value. Adding MFCCs does not seem to improve performance in a meaningful way when also using pitch. See Figure \ref{varyfeatures} for more information. Note that using \emph{only} word2vec performs reasonably well, because with our method it indirectly encodes the time since the last utterance.
+We tested different combinations of features. Using FFV as the only prosodic feature performs worse than FFV together with the absolute pitch value. Adding MFCCs does not seem to improve performance in a meaningful way when also using pitch. See @fig:varyfeatures for more information. Note that using \emph{only} word2vec performs reasonably well, because with our method it indirectly encodes the time since the last utterance.
 
-Figure \ref{varylstm} shows a comparison between feed forward and LSTM networks. The parameter count is the number of connection weights the network learns in training. Note that LSTMs have significantly higher performance, even with similar parameter counts.
+@Fig:varylstm shows a comparison between feed forward and LSTM networks. The parameter count is the number of connection weights the network learns in training. Note that LSTMs have significantly higher performance, even with similar parameter counts.
 
-We compared different layer sizes for our LSTM networks, as shown in Figure \ref{varylayers}. A network depth of two hidden layers worked best, but the results are adequate with a single hidden layer or three hidden layers.
+We compared different layer sizes for our LSTM networks, as shown in @fig:varylayers. A network depth of two hidden layers worked best, but the results are adequate with a single hidden layer or three hidden layers.
 
-In \autoref{fig:final}, our final results are given for the completely independent evaluation data set. We compared the results by Mueller et al. (2015) [@mueller_using_2015] with our system. They used the same dataset, but focused on offline predictions, meaning their network had future information available, and they evaluated their performance on the whole corpus including segments with silence and with alternating conversation. We adjusted our baseline and evaluation system to match their setup. As can be seen in Figure \ref{fig:mueller}, our predictor performs significantly better.
+In @fig:final, our final results are given for the completely independent evaluation data set. We compared the results by Mueller et al. (2015) [@mueller_using_2015] with our system. They used the same dataset, but focused on offline predictions, meaning their network had future information available, and they evaluated their performance on the whole corpus including segments with silence and with alternating conversation. We adjusted our baseline and evaluation system to match their setup. As can be seen in @fig:mueller, our predictor performs significantly better.
 All other related research used different languages, datasets or evaluation methods, making a direct comparison meaningless.
 
-Figure \ref{fig:ourbest} shows the results with our own evaluation method. We provide values for different margins of error used in other research. Subjectively, missing a BC trigger may be more acceptable than a false positive, so we also provide a result with a balanced precision and recall. 
-
+@Fig:ourbest shows the results with our presented evaluation method. We provide scores for different margins of error used in other research. Subjectively, missing a BC trigger may be more acceptable than a false positive, so we also provide a result with balanced precision and recall.
 
 \begin{figure}
 \caption{Results on the Validation Set}\label{fig:survey}
@@ -583,7 +580,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
     2000\,ms & 0.275 & 0.577 & 0.373 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{varycontext}
+    \label{fig:varycontext}
 }
 
 \subfloat[Results with various context frame strides]{
@@ -596,7 +593,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
     4 & 0.285 & 0.498 & 0.363 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{varystrides}
+    \label{fig:varystrides}
 }
 
 \centering
@@ -618,7 +615,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
     power, pitch, ffv, word2vec$_{dim=50}$ & 0.304 & 0.527 & 0.385 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{varyfeatures}
+    \label{fig:varyfeatures}
 }
 
 
@@ -633,7 +630,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
     LSTM ($70 : 35$) & 38k & 0.305 & 0.488 & \bf{0.375} \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{varylstm}
+    \label{fig:varylstm}
 }
 
 \subfloat[Comparison of different network configurations. Two LSTM layers give the best results.]{
@@ -648,7 +645,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
     $70 : 50 : 35$ & 0.278 & 0.541 & 0.367 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{varylayers}
+    \label{fig:varylayers}
 }
 
 
@@ -664,12 +661,12 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
 \caption{Final best results on the evaluation set (chosen by validation set)}\label{fig:final}
 
 
-\csubfloat[Comparison with previous research. Müller et al. did their evaluation without the constraints defined in \autoref{eval-1}, so we adjusted our baseline and evaluation to match their setup]{
-    \begin{tabular}{lccc}
+\csubfloat[Comparison with previous research. \cite{mueller_using_2015} did their evaluation without the constraints defined in \autoref{eval-1}, so we adjusted our baseline and evaluation to match their setup.]{
+    \begin{tabular}{p{7cm}ccc}
     \hline\noalign{\smallskip}
         Predictor & Precision & Recall & F1-Score \\
         \noalign{\smallskip}\svhline\noalign{\smallskip}
-        Baseline (random) & 0.0417 & 0.0417 & 0.0417 \\
+        Baseline (random) & 0.042 & 0.042 & 0.042 \\
         Müller et al. (offline) \cite{mueller_using_2015} & -- & -- & 0.109 \\
         Our results (offline, context of \SIrange{-750}{750}{ms}) & 0.114 & 0.300 & \bf{0.165} \\
         Our results (online, context of \SIrange{-1500}{0}{ms}) & 0.100 & 0.318 & 0.153 \\
@@ -679,7 +676,7 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
 }
 
 \csubfloat[Results with our evaluation method with various margins of error used in other research \cite{de_kok_survey_2012}. Performance improves with a wider margin width and with a later margin center.]{
-    \begin{tabular}{clccc}
+    \begin{tabular}{cp{5cm}ccc}
     \hline\noalign{\smallskip}
         Margin of Error & Constraint & Precision & Recall & F1-Score \\
         \noalign{\smallskip}\svhline\noalign{\smallskip}
@@ -687,10 +684,11 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
         \SIrange{-100}{+500}{ms} &&	0.239 & 0.406 & 0.301 \\
         \SIrange{-500}{+500}{ms} && 0.247 & 0.536 & 0.339 \\
     \hline\noalign{\smallskip}
-        \SIrange{0}{+1000}{ms} & Baseline (random) & 0.111 & 0.0521 & 0.0708 \\
+        \SIrange{0}{+1000}{ms} & Baseline (random, correct BC count) & 0.111 & 0.052 & 0.071 \\
+         & Baseline (random, 8x correct BC count) & 0.079 & 0.323 & 0.127 \\
          & Balanced Precision and Recall & 0.342 & 0.339 & 0.341 \\
          & Best F1-Score (only acoustic features) & 0.294 & 0.488 & 0.367 \\
-         & Best F1-Score (acoustic and linguistic features) & 0.308 & 0.497 & \bf{0.380} \\
+         & Best F1-Score (acoustic and linguistic features) & 0.312 & 0.511 & \bf{0.388} \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
     \label{fig:ourbest}
@@ -702,9 +700,30 @@ Figure \ref{fig:ourbest} shows the results with our own evaluation method. We pr
 
 We evaluated the results for multicategorical output using confusion matrices. A confusion matrix shows how many samples that should be categorized as one category are categorized as another category for every combination of categories.
 
+A confusion matrix for the best network configuration from above fine-tuned for multiple categories can be seen in @tbl:confusionmatrix. The results were not impressive, with the size of the dataset (see also @tbl:catcounts) being a limiting factor.
+
+\begin{table}[]
+\centering
+\begin{tabular}{lrrrrrr}
+    \hline\noalign{\smallskip}
+{\small correct \textbackslash\  predicted} & No BC & neutral& question    & surp/neg          & affirmative & positive    \\
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+No BC                            & ---        & 2695         & 930         & 4018              & 1600        & 2697        \\
+neutral                          & 1417       & \textbf{640} & 377         & 1057              & 366         & 341         \\
+question                         & 31         & 16           & \textbf{14} & 24                & 8           & 12          \\
+surp/neg                         & 99         & 35           & 24          & \textbf{120}      & 14          & 25          \\
+affirmative                      & 55         & 23           & 21          & 52                & \textbf{17} & 18          \\
+positive                         & 113        & 43           & 25          & 78                & 24          & \textbf{20} \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+\end{tabular}
+\caption{Confusion matrix for a LSTM with the output layer finetuned to distinguish between multiple categories, trained on balanced training data.}
+\label{tbl:confusionmatrix}
+\end{table}
+
+
 # Technical Details
 
-We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results.
+We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results. This software was also used to create most of the figures in this document.
 
 ## Web Visualizer
 
@@ -714,7 +733,7 @@ The web visualizer is an interactive tool to display time-based data. It can dis
 
 In addition, it can also show time-aligned textual labels either as seperate features or as overlays over the other data. We use this to display the transcriptions below the audio, and to highlight ranges of audio, for example which areas we use as positive and negative prediction areas, or which areas we interpret as "talking" or "listening" as can be seen in @fig:listening. This allows us to quickly check if the chosen prediction areas make general sense.
 
-The user can choose a specific or random conversation from the training, validation or evaluation data set. Then they can choose to view a combination of the available features from a categorical tree [@fig:categories]. The user can zoom into any section of the data and play the audio, the UI will follow the current playback position.
+The user can choose a specific or random conversation from the training, validation or evaluation data set. Then they can choose to view a combination of the available features from a categorical tree (@fig:categories). The user can zoom into any section of the data and play the audio, the UI will follow the current playback position.
 
 \begin{wrapfigure}{R}{0.3\textwidth}
 \centering
@@ -722,9 +741,9 @@ The user can choose a specific or random conversation from the training, validat
 \caption{Selecting a feature to display in the Web Visualizer.\label{fig:categories}}
 \end{wrapfigure}
 
-The user can also save the exact current GUI state including zoom and playback position to generate a unique URL that will restore the visualizer to that state when loaded.
+The user can also save the exact current GUI state including zoom and playback position to generate a unique URL that will restore the visualizer to that state when loaded. This is useful for sharing and saving interesting sections.
 
-Some state presets are also available, such as the default view which will show both channels of a conversation, together with the transcriptions, power, pitch and highlights for the training areas. Another meta preset is the NN output view, which includes a single audio channel and the raw output, smoothed output and resulting audio track for a trained network, as seen for example in @fig:postproc. The exact configuration can be chosen in a form [@fig:loadingnn]. Newly trained networks will automatically be available when the training is finished, allowing quick subjective evaluation of the results.
+Some state presets are also available, such as the default view which will show both channels of a conversation, together with the transcriptions, power, pitch and highlights for the training areas. Another meta preset is the NN output view, which includes a single audio channel and the raw output, smoothed output and resulting audio track for a trained network, as seen for example in @fig:postproc. The exact configuration can be chosen in a form (@fig:loadingnn). Newly trained networks will automatically be available when the training is finished, allowing quick subjective evaluation of the results.
 
 ![Loading the output of the best epoch of specific network for channel A of the current conversation](img/20170211161913.png){#fig:loadingnn width=70%}
 
@@ -733,7 +752,7 @@ Some state presets are also available, such as the default view which will show 
 
 The visualizer is split into two parts, the server side (backend) and the client side (frontend). The server is written in python. It accepts connections via Websockets. It sends a list of available conversation IDs and corresponding features. The client can then select a conversation and dynamically load any combination of the available features, which the server will evaluate on demand while caching the most recently used features. The backend is in a shared code base with the extraction code, so it uses parts of the same code we also use for training and evaluation.
 
-The client is written in TypeScript with MobX and React and runs in a web browser. It uses HTML canvas to draw the visualization of the numerical features. The other visualizations are drawn using DOM elements with CSS Flexbox. The drawn waveform shows the maximum and minimum as a dark blue color, and the root mean square ($\text{rms}=\sqrt{\frac{1}{n} (x_1^2 + x_2^2 + \dots + x_n^2)}$ of the signal (similar to the signal power) as a lighter blue overlay. Audio has many datapoints, for example, for 8kHz Audio of 10 minutes, the UI needs to iterate over 5 million data points. When the Audio is played back, the whole view shifts by some fraction of a pixel every 1/60th of a second, which is too much data for a browser client to handle. The trivial rendering of this takes $O(n)$ time for every rerender, where n is the total number of samples that are in the region that is currently on screen. To speed this up, the UI uses an intelligent data structure based on binary trees to cache the values for [min, max, count, RMS] for every range over the indices $[k \cdot 2^l, (k+1) \cdot 2^l - 1]$, where $k\in\mathbb{N}$ is the offset and $l\in\mathbb{N}$ is the "zoom level". Now every access takes only $O(\log n)$ time. For example, when requesting the range $[3, 13]$, the system will use the cached values for $[2, 3], [4, 7], [8, 11], [12]$. This works because min, max and rms can all be combined from partial results without needing to know the individual values. For example $max(5,6,1,4,7,1,5,3) = max(max(5,6,1,4), 7, max(1,5,3))$. For RMS, this can be done by saving both the square sum and element counts for every range.
+The client is written in TypeScript with MobX and React and runs in a web browser. It uses HTML canvas to draw the visualization of the numerical features. The other visualizations are drawn using DOM elements with CSS Flexbox. The drawn waveform shows the maximum and minimum as a dark blue color, and the root mean square  of the signal ($\text{rms}=\sqrt{\frac{1}{n} (x_1^2 + x_2^2 + \dots + x_n^2)}$, similar to the signal power) as a lighter blue overlay. Audio has many datapoints, for example, for 10 minutes of 8kHz audio, the UI needs to iterate over 5 million data points. When the Audio is played back, the whole view shifts by some fraction of a pixel every 1/60th of a second, which causes the need for a recalculation of the RMS, min, max values for every pixel. This is too much data for a browser client to handle. The trivial rendering of this takes $O(n)$ time for every rerender, where n is the total number of samples that are in the region that is currently on screen. To speed this up, the UI uses an intelligent data structure based on binary trees to cache the values for [min, max, RMS] for every range over the indices $[k \cdot 2^l, (k+1) \cdot 2^l - 1]$, where $k\in\mathbb{N}$ is the offset and $l\in\mathbb{N}$ is the "zoom level". Now every access takes only $O(\log n)$ time. For example, when requesting the range $[3, 13]$, the system will use the cached values for $[2, 3], [4, 7], [8, 11], [12]$. This works because min, max and rms can all be combined from partial results without needing to know the individual values. For example $max(5,6,1,4,7,1,5,3) = max(max(5,6,1,4), 7, max(1,5,3))$. For RMS, this can be done by saving both the square sum and element counts for every range, applying the square root at the end.
 
 
 
@@ -750,29 +769,33 @@ Many of the methods for extraction were written as pure functions, which allowed
 @functools.lru_cache
 @DiskCache
 def get_power(adc_filename: str, window_ms: int) -> Feature:
-    return Feature(numpy.log10(load_adc(adc_filename).adc2pow))
+    return Feature(numpy.log10(load_adc(adc_filename).adc2pow()))
 ```
 
-When this function is called, the decorator function `DiskCache` is called first. This function creates a deterministic JSON object of the function name, function source code, and parameters. This JSON object is run through sha256. If a serialized (pickled) file with the hash as the filename exists in the cache folder, that file is loaded. Otherwise, the function is evaluated and its result is saved to the cache folder together with the meta json file. To circumvent issues with thousands of files in a single folder, the first two letters of the hash are used as a subdirectory name, like git does it for its object database. The first time this function is run it takes some time. The subsequent times, it is loaded from disk and not evaluated. Because of automatic disk caching by the OS, this becomes nearly instant for frequently accessed files. In addition, the lru_cache ensures that recently used function results are cached in RAM, which causes an additional speed boost because it circumvents the time otherwise spent unpickling the file.
+When this function is called, the decorator function `DiskCache` is called first. This function creates a deterministic JSON object of the function name, function source code, and parameters. This JSON object is run through the hash function sha256. If a serialized (pickled) file with the hash as the filename exists in the cache folder, that file is loaded. Otherwise, the function is evaluated and its result is saved to the cache folder together with the meta json file. To circumvent issues with thousands of files in a single folder, the first two letters of the hash are used as a subdirectory name, like git does it for its object database. The first time this function is run it takes some time. The subsequent times, it is loaded from disk and not evaluated. Because of automatic disk caching by the OS, this becomes nearly instant for frequently accessed files. In addition, the lru_cache ensures that recently used function results are cached in RAM, which causes an additional speed boost because it circumvents the time otherwise spent unpickling the file.
 
-This way, we do not need to explicitly seperate the extraction from training and write data files, we can simply run the training and the extraction only runs when the extraction parameters (features / context size) changes. For example, if we have already trained a network on the power and pitch features and we now add the FFV feature, the extraction code will only evaluate the FFV feature while using the cached data for power and picth.
+This way, we do not need to explicitly seperate the extraction from training and write data files, we can simply run the training and the extraction only runs when the extraction parameters (features / context size) changes. For example, if we have already trained a network on the power and pitch features and we now add the FFV feature, the extraction code will only evaluate the FFV feature while using the cached data for power and pitch.
 
 We also used joblib, a python library for easy parallelization, to enable the extraction and evaluation processes to use all available CPU cores.
 
 ## Evaluation Visualizer
 
-The evaluation visualizer reads all the output JSON files from training and displays the resulting loss graphs as seen in @fig:l2reg. It also shows a table of the evaluation results with various parameters for a every neural network sorted from best validation result to worst [@fig:fullsingle]. There is also a graph for detailed comparison of the postprocessing and evaluation methods, as shown in @fig:varysigma, @fig:varycenter, and @fig:varymonologuing.
-This program is completely client-side and runs in the webbrowser.
+The evaluation visualizer reads all the output JSON files from training and displays the resulting loss graphs as seen in @fig:l2reg. It also shows a table of the evaluation results with various parameters for a every neural network sorted from best validation result to worst (@fig:fullsingle). There is also a graph for detailed comparison of the postprocessing and evaluation methods, by fixing every parameter except one of them and plotting Precision, Recall, F1-Score with that parameter on the x-axis, as shown in @fig:varysigma, @fig:varycenter, and @fig:varymonologuing.
 
-The UI can show multiple graphs at the same time, and also shows an overview over all the best results from every network, which can be filtered by RegExp. In addition, it can automatically generate \LaTeX  tables from the shown filtered outputs for customizable columns.
+The UI can show multiple graphs at the same time, and also shows an overview over all the best results from every network (@fig:evaloverview), which can be filtered by RegExp. In addition, it can generate \LaTeX{} tables from the shown filtered outputs for any combination of columns.
+
+This program is completely client-side and runs in the webbrowser, loading all needed data from the JSON files at runtime.
+
+
+![Overview table of all found network evaluation results, sorted by validation F1-Score.](img/20170220232312.png){#fig:evaloverview}
 
 ![Full overview over a single training result, showing the loss graph for checking for overfitting issues and the evaluation results.](img/20170212134323.png){#fig:fullsingle}
 
-![Precision, Recall and F1-Score depending on the smoothing sigma used. The F1-Score peaks at $\sigma=350\,ms$, Precision peaks at $\sigma=525\,ms$. With lower sigmas, the predictor triggers more often causing the recall to rise](img/20170212003936.png){#fig:varysigma}
+![Precision, Recall and F1-Score depending on the smoothing sigma used. The F1-Score peaks at $\sigma=\SI{350}{ms}$, Precision peaks at $\sigma=\SI{525}{ms}$. With lower sigmas, the predictor triggers more often causing the recall to approach 1.](img/20170212003936.png){#fig:varysigma}
 
 ![Precision, Recall and F1-Score depending on the margin of error center, showing a very clear normal distribution. The center of this distribution depends on the filter sigma and cutoff, meaning we can optimize it depending on the evaluation method.](img/20170212134705.png){#fig:varycenter}
 
-![Precision, Recall and F1-Score depending on the minimum monologuing segment length. -1 means we evaluate on all data, including silence.](img/20170212132651.png){#fig:varymonologuing}
+![Precision, Recall and F1-Score depending on the minimum monologuing segment length. -1 has the symbolic meaning that we evaluate on all data, including silence.](img/20170212132651.png){#fig:varymonologuing}
 
 # Conclusion and Future Work
 
@@ -781,7 +804,7 @@ We have presented a novel approach to predict backchannels using acoustic and li
 There are some points where further improvements could be made.
 We only scraped the surface of adding linguistic features via word2vec because it assumes the availability of an instant speech recognizer. In our system we simply used the available hand-written transcripts, but in a real online environment this would need a more sophisticated approach. Further work is needed to evaluate other methods for adding word vectors to the input features and to analyse problems with our approach.
 
-We only tested dense feed forward neural networks and LSTMs, other architectures like convolutional neural networks may also give interesting results. In addition, the training method we use makes the neural network unaware of the postprocessing. This means the network cannot know when it is actually producing a trigger, which means it can't know exactly when the last backchannel was. Because backchannels are unlikely to happen too close to each other, adding the time since the last trigger as a feature to the inputs may improve the results. This means we would need to decide on the exact postprocessing parameters before training, which would be incompatible with our current approach of optimizing those paramters with bayesian optimization depending on the specific outputs of the network.
+We only tested dense feed forward neural networks and LSTMs, other architectures like time-delay neural networks [@waibel_phoneme_1989] or their generalized counterpart (convolutional neural networks) may also give interesting results. In addition, the training method we use makes the neural network unaware of the postprocessing. This means the network cannot know when it is actually producing a trigger, which means it can't know exactly when the last backchannel was. Because backchannels are unlikely to happen too close to each other, adding the time since the last trigger as a feature to the inputs may improve the results. This means we would need to decide on the exact postprocessing parameters before training, which would be incompatible with our current approach of optimizing those paramters with bayesian optimization depending on the specific outputs of the network.
 
 Our approach of choosing the training areas may not be optimal because the delay between the last utterance of the speaker and the backchannel can vary significantly. A possibility would be to align the training area by the last speaker utterance instead of the backchannel start, but this has some problems as described in @sec:selection.
 
