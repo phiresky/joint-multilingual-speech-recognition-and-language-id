@@ -721,7 +721,7 @@ positive                         & 113        & 43           & 25          & 78 
 \end{table}
 
 
-# Technical Details
+# Implementation
 
 We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results. This software was also used to create most of the figures in this document.
 
@@ -812,7 +812,7 @@ Our tests of predicting multiple separate categories of BCs did not produce any 
 
 Because backchannels are a largely subjective phenomenon, a user study would be helpful to subjectively evaluate the performance of our predictor and to compare it with human performance in our chosen evaluation method. Another method would be to find consensus for backchannel triggers by combining the predictions of multiple human subjects for a single speaker channel as described by Huang et al. as "parasocial consensus sampling" [@huang_parasocial_2010].
 
-An interesting extension for use in Virtual Assistants would be to also predict speaker changes in addition to backchannels. Our current model already often predicts a backchannel at a time where the speaker stops talking and expects a longer response. Our current model of predicting [No BC, BC] could be extended to predict [No BC, BC, Speaker Change]. This would allow a virtual assistant to give natural sounding backchannel responses and detect when it is supposed to start answering the query.
+An interesting extension for use in Virtual Assistants would be to also predict turn taking in addition to backchannels. Our current model already often predicts a backchannel at a time where the speaker stops talking and expects a longer response. Our current model of predicting [No BC, BC] could be extended to predict [No BC, BC, Speaker Change]. This would allow a virtual assistant to give natural sounding backchannel responses and detect when it is supposed to start answering a query.
 
 
 # Bibliography
