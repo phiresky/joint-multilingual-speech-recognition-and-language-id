@@ -8,6 +8,8 @@ lang: en-US
 title: |
     Backchannel Prediction for Conversational Speech Using Recurrent Neural
     Networks
+figPrefix: ["Figure", "Figures"]
+tblPrefix: ["Table", "Tables"]
 ---
 
 # Introduction
@@ -26,7 +28,6 @@ Artificial assistants like Siri, Alexa, etc. are becoming increasingly popular, 
 # Related Work
 
 Most related work is either completely rule-based or uses at least some manual components in combination with data-driven learning.
-
 @ward_prosodic_2000 were the first to propose specific rules for when to produce backchannel feedback based on acousting cues:
 
 > "[...] we formulate
@@ -42,14 +43,12 @@ Most related work is either completely rule-based or uses at least some manual c
 >
 > you should produce back-channel feedback." [@ward_prosodic_2000]
 
-These rules were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted multiple different pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 with only acoustic features to 0.221.
+These rules were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted multiple different pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 with only acoustic features to 0.221. [@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-taking and turn-keeping without a backchannel.
 
-A lot of related research is based on Japanese speech ([@okato_insertion_1996; @ward_using_1996; @ward_prosodic_2000; @fujie_conversation_2004;@takeuchi_timing_2004;@kitaoka_response_2005;@nishimura_spoken_2007]), some on English corpora ([@ward_prosodic_2000;@morency_predicting_2008;@de_kok_multimodal_2009;@huang_learning_2010;@ozkan_concensus_2010;@ozkan_concensus_2010; @ozkan_latent_2010]) and some on Dutch speech [@morency_probabilistic_2010; @de_kok_learning_2010].
+A lot of related research is based on Japanese speech [@okato_insertion_1996; @ward_using_1996; @ward_prosodic_2000; @fujie_conversation_2004;@takeuchi_timing_2004;@kitaoka_response_2005;@nishimura_spoken_2007], some on English speech [@ward_prosodic_2000;@morency_predicting_2008;@de_kok_multimodal_2009;@huang_learning_2010; @ozkan_concensus_2010; @ozkan_latent_2010] and some on Dutch speech [@morency_probabilistic_2010; @de_kok_learning_2010].
 
-[@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-keeping, and turn-taking.
 
 Rule-based approaches can be inflexible, error-prone and involve a lot of manual fine-tuning. A first approach for distinguishing different speech acts, including BCs, using a combination of hidden markov models and neural networks was proposed by @ries_hmm_1999.
-
 Previous work at this institute also includes using a feed-forward neural network for backchannel detection [@mueller_using_2015], though this work focused on offline "prediction", meaning their input features included sections of audio happening during or after the backchannel, making it unsuitable for a real-time environment.
 
 @de_kok_survey_2012 compared different evaluation metrics for backchannel predictors. As an objective evaluation method, the use of the F1-Score has been established, but the margin of error to accept a prediction as correct varies. Together with the fact that no one standard data set exists this makes a comparison between different evaluation results hard.
@@ -262,11 +261,11 @@ After aligning the prediction and the ground truth using the margin of error, we
 
 With these, we can now calculate the measures _Precision_ and _Recall_ as commonly used in information retrieval and binary classification:
 
-$$
-\begin{split}
+
+\begin{align}
 \mathit{Precision} & = {\mathit{TP} \over \mathit{TP} + \mathit{FP}} \\
 \mathit{Recall} & = {\mathit{TP} \over \mathit{TP} + \mathit{FN}}
-\end{split}
+\end{align}
 $${#eq:precrec}
 
 Both of these are values between 0 and 1. The _Precision_ value is the fraction of returned values that were correct, and can thus be seen as a measure of the _quality_ of a algorithm. The _Recall_ value, also known as _Sensitivity_ is the fraction of relevant values that the algorithm output, thus it can be interpreted as a measure of _quantity_. Precision and Recall are in a inverse relationship, and it is usually possible to increase one of them while reducing the other by tweaking parameters of the algorithm. An example of this can be seen in @fig:varythreshold. Recall can be easily maximized to 100% by simply returning true for every given timestamp. <!--Precision can be maximized by never outputting anything, causing every predicted value to be correct. -->To solve this problem and to introduce a single scalar for measuring the performance, we use the normalized harmonic mean of precision and recall, also known as the F1-Score or F-Measure, as defined in @eq:abc.
@@ -379,24 +378,24 @@ We chose to use the top 150 unique utterances from this set. For the most common
 
 The SwDA is incomplete, it only contains labels for about half of the Switchboard dataset. Because we wanted to use as much training data as possible, we had to identify
 utterances as backchannels just by their text. As can be seen in @tbl:bcs, the SwDA also has some silence utterances marked as backchannels, as well as only laughter and noise, which we can't distinguish from normal silence, so we ignore them altogether. We manually removed some
-requests for repetition like “excuse me” from the SwDA list, and added some
+requests for repetition like (e.g. “excuse me”) from the SwDA list, and added some
 other utterances that were missing from the SwDA transcriptions but
 present in the original transcriptions, by going through the most common
-utterances and manually selecting those that seemed relevant, including but not limited to ‘um-hum yeah’, ‘absolutely’, ‘right uh-huh’.
+utterances and manually selecting those that seemed relevant, including but not limited to "um-hum yeah", "absolutely", "right uh-huh".
 
 In total we now had a list of 161 distinct backchannel utterances. The most common backchannels in the data set are “yeah”, “um-hum”,
 “uh-huh” and “right”, adding up to 41860 instances or 68% of all
 extracted backchannel phrases.
 
-The transcriptions also contain markers indicating laughter while talking (e.g. "i didn't think that well we wouldn't still be [laughter-living] [laughter-here] so ..."),
-laughter on its own (`[laughter]`), noise markers (`[noise]`) for microphone crackling or similar and markers for different pronunciations (for example "mhh-kay" is transcribed as `okay_1`).
+The transcriptions also contain markers indicating laughter while talking (e.g. `i didn't think that well we wouldn't still be [laughter-living] [laughter-here] so ...`),
+laughter on its own (`[laughter]`), noise markers (`[noise]`) for microphone crackling or similar, and markers for different pronunciations (for example "mhh-kay" is transcribed as `okay_1`).
 To select which utterances should be categorized as backchannels and
 used for training, we first filter noise and other markers from the
 transcriptions (e.g. `[laughter-yeah] okay_1 [noise]` becomes
 `yeah okay`) and then compare the resulting text to our list of backchannel phrases.
 
-Some utterances such as “uh” can be both backchannels and speech
-disfluencies. For example: "... pressed a couple of the buttons up in the / uh / the air conditioning panel i think and uh and it reads out codes that way". Note that the first _uh_ is it's own utterance and would thus be seen by our extractor as a backchannel. The second occurrence of "uh" has normal speech around in the same utterance it so we would already ignore it. We only want those utterances that are actual backchannels, so after filtering by utterance text we only choose those that have either silence or another backchannel before them.
+Some utterances such as _uh_ can be both backchannels and speech
+disfluencies. For example: "... pressed a couple of the buttons up in the / uh / the air conditioning panel i think and uh and it reads out codes that way". Note that the first _uh_ is it's own utterance and would thus be seen by our extractor as a backchannel. The second occurrence of _uh_ has normal speech around in the same utterance it so we would already ignore it. We only want those utterances that are actual backchannels, so after filtering by utterance text we only choose those that have either silence or another backchannel before them.
 
 This gives us the following selection algorithm:
 ```python
@@ -411,9 +410,9 @@ def is_backchannel(utterance):
              is_backchannel(previous(utterance)))
 ```
 
-This method gives us a total of 61645
-backchannels out of 391593 utterances (15.7%) or 71207 out of 3228128
-words (2.21%). Note that the percentage of words is much lower because backchannel utterance are on average much shorter than other utterances.
+This method gives us a total of 62k
+backchannels out of 390k utterances (16%) or 71k out of 3.2 million
+words (2.2%). Note that the percentage of words is much lower because backchannel utterance are on average much shorter than other utterances.
 
 ### Feature Extraction
 
@@ -421,9 +420,7 @@ words (2.21%). Note that the percentage of words is much lower because backchann
 #### Acoustic Features
 
 We used the Janus Recognition Toolkit [@levin_janus-iii_2000] for the acoustic feature extraction (power, pitch tracking, FFV, MFCC). The power value used is the base-10 logarithm of the raw `adc2pow` value output by the Janus Recognition Toolkit (JRTk). The pitch value is the raw value output by the Janus pitch tracker. All features are normalized so they fit in the range of $[-1, 1]$. For FFV, we used the default JRTk configuration of seven dimensions, for MFCCs the default configuration of 20 dimensions.
-
 These features are extracted for \SI{32}{ms} frame windows, with a frame shift of \SI{10}{ms}. This gives us 100 frames per feature per second.
-
 A sample of the pitch and power features can be seen in @fig:pitchpow.
 
 ![From top to bottom: Audio samples, transcription, pitch and power for a single audio channel. Note that the pitch value is only meaningful when the person is speaking.](img/20170208184917.png){#fig:pitchpow}
@@ -440,7 +437,7 @@ We extracted these features parallel to those output by Janus, with a 10 millise
 
 #### Context and Stride
 
-We extract the features for a fixed time context. Then we use a subset of that range as the area we feed into the network. 
+We extracted the features for a fixed time context. Then we used a subset of that range as the area we feed into the network. 
 As an example, we could extract the range $[\SI{-2000}{ms}, \SI{0}{ms}]$ for every feature, giving us 200 frames. To train the network on \SI{1500}{ms} of context, we would treat every offset like $[\SI{-2000}{ms},\allowbreak \SI{-500}{ms}],\allowbreak [\SI{-1990}{ms},\allowbreak \SI{-490}{ms}], \dots,\allowbreak [\SI{-1500}{ms}, \SI{0}{ms}]$ as individual training samples. This would give us 50 training samples per backchannel utterance, greatly increasing the amount of training data, but introducing smear as the network needs to learn to handle a larger variance in when the backchannel cue appears in its inputs, and thus reducing the confidence of its output.
 
 This turned out to not work very well, so in the end we settled on only extracting the features for the range $[-w - \SI{10}{ms}, \SI{0}{ms}]$ where $w$ is the context width, and training the network on $[-w - \SI{10}{ms},\allowbreak \SI{10}{ms}]$ and $[-w, \SI{0}{ms}]$. This gives us two training samples per utterance, reduces the smearing problem and at the same time forces the network to learn to correctly handle when its inputs are the same or similar but offset by one.
@@ -474,7 +471,7 @@ We compared online prediction and offline "prediction", where offline prediction
 
 The first LSTM we tested by simply replacing the feed forward layers with LSTM layers immediately improved the results by 16% without any further adjustments. We kept the default configuration of using "Peepholes" [@gers_learning_2003] and used only forward facing layers (connections from past to future). But this showed the issues with a fixed learning rate, as the gradient regularily exploded after every 10 to 15 epochs, as can be seen in @fig:exploding. When adding FFV, increasing the input dimension per time frame from 2 to 9, SGD stopped working at all (everything became NaN) without manually tuning the learning rate. One solution to this would be to use a scheduler. A scheduler automatically adjusts the learning rate depending on some condition. An example is simple exponential decay, which exponentially decreases the initial learning rate with a fixed factor. Another method is newbob scheduling, which exponentially decreases the learning rate when the validation error stops decreasing or only decreases very little. These schedulers need parameter tuning, making them hard to use without a lot of experimenting.
 
-![Exploding gradient while training an LSTM network. Shown is the training loss over epochs.](img/20170208233441.png){#fig:exploding}
+![Anomalies while training an LSTM network with a fixed learning rate. Shown is the training loss over epochs.](img/20170208233441.png){#fig:exploding}
 
 We solved the problem of automatically adjusting the learning rate by using Adam [@kingma_adam:_2014] instead of SGD, which is a gradient descent method related to Adadelta and Adagrad which also incorporates momentum in some way and intelligently adjusts the learning rate. I have no idea how this works, but Adam with a fixed learning rate of 0.001 worked great for us, so we did all further testing using Adam.
 
@@ -484,11 +481,20 @@ We solved the problem of automatically adjusting the learning rate by using Adam
 The LSTM networks we tested were prone to overfitting very quickly, but they still
 provided better results after two to three epochs than normal feed forward networks after 100 epochs. Overfitting happens when the results still improve on the training data set, but plateau or get worse on the validation data set. This means the network is starting to learn specific quirks in the training data set by heart, which it then can't apply on other data.
 
-We tried two regularization methods to reduce overfitting:
+We tried two regularization methods to reduce overfitting.
+At first we added dropout layers to the networks to try and avoid overfitting and to generally improve the results. Dropout layers randomly disconnect a specified fraction of neurons in a layer, different for every training batch. This should in theory help the network interpret it's inputs even when it is partially "blind", reducing the effective input dimension and thus reducing overfitting. For validation and evaluation the dropout is deactivated, so the network is able to take advantage of every single feature when actually using it as a predictor. In this case, we tried adding different dropout settings such as
 
-At first we added dropout layers to the networks to try and avoid overfitting and to generally improve the results. Dropout layers randomly disconnect a specified fraction of neurons in a layer, different for every training batch. This should in theory help the network interpret it's inputs even when it is partially "blind", reducing the effective input dimension and thus reducing overfitting. For validation and evaluation the dropout is deactivated, so the network is able to take advantage of every single feature when actually using it as a predictor. In this case, we tried adding different dropout settings such as "input (20% dropout) $\rightarrow$ 125 neurons (50% dropout) $\rightarrow$ 80 neurons (50% dropout) $\rightarrow$ output" but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
+$$
+\begin{aligned}
+ & \text{input} & (20\%\text{ dropout}) \\
+\rightarrow & 125 \text{ neurons} & (50\% \text{ dropout}) \\
+\rightarrow & 80 \text{ neurons} & (50\% \text{ dropout}) \\
+\rightarrow & \text{output} & 
+\end{aligned}
+$$
 
-The solution that worked was L2-Regularization with a factor of $0.0001$. L2-Regularization places a penalty on increasing complexity of the learned model by adding the sum of the squares of the weights to the loss function. This reduced the overfitting problem greatly and slightly improved the
+but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
+The solution that worked was L2-Regularization with a factor of 0.0001. L2-Regularization places a penalty on increasing complexity of the learned model by adding the sum of the squares of the weights to the loss function. This reduced the overfitting problem greatly and slightly improved the
 results, as can be seen in the example in @fig:l2reg.
 
 ![The same LSTM network trained without (left) and with (right) L2-Regularization. Note that without regularization the network starts overfitting after two epochs. With regularization training and validation loss mostly stay the same with regularization, and the validation error continues to improve. Training loss is blue, validation loss is red and validation error is orange. The y-axis is scaled the same for both graphs.](img/20170209000001.png){#fig:l2reg}
