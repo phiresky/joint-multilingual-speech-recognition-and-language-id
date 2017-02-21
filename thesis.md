@@ -179,7 +179,7 @@ To create this balanced data set, we can choose the range a few seconds before e
 The method of choosing the training areas described in @sec:binary assumes we train the network on binary values, with 1 = 100% = "Backchannel happens here" and 0 = 0% = "Definitely no backchannel happens here".
 Another approach for choosing a training area would be to not choose two separate areas to predict binary 1 and 0 values, but to instead use the area around every actual backchannel trigger and train the network on a bell curve with the center being at the ground truth with the maximum value of 1, and lower values between 0 and 1 for later and earlier values. For example, if there is a backchannel at $t=\SI{5}{s}$ and we identify $t=\SI{4.5}{s}$ as the actual trigger time, we could train the network on output=1 for a context centered at $\SI{4.5}{s}$ 0.5 for \SI{200}{ms} earlier and later and on $0 < \text{output} \ll 1$ for more distant times. This has the same problem as described above in that we would need to know the exact time of the event that triggered the backchannel. Testing this approach by simply using a fixed offset before the onset of the backchannel utterance gave far worse results than the binary training approach, so we discarded the idea in favor of concentrating on finding the optimal context ranges for the binary approach.
 
-## Training and Neural Network Design {#sec:training}
+## Neural Network Design and Training {#sec:training}
 
 We initially used a simple feed forward network architecture. The input layer consists of
 all the chosen features over a fixed time context. With a time context of $c\,\si{ms}$ and a feature dimension of $f$, this gives us an input dimension of $f \cdot \floor{c \over \SI{10}{ms}}$.
@@ -263,10 +263,9 @@ With these, we can now calculate the measures _Precision_ and _Recall_ as common
 
 
 \begin{align}
-\mathit{Precision} & = {\mathit{TP} \over \mathit{TP} + \mathit{FP}} \\
-\mathit{Recall} & = {\mathit{TP} \over \mathit{TP} + \mathit{FN}}
+    \mathit{Precision} & = {\mathit{TP} \over \mathit{TP} + \mathit{FP}} \\[1em]
+    \mathit{Recall} & = {\mathit{TP} \over \mathit{TP} + \mathit{FN}}
 \end{align}
-$${#eq:precrec}
 
 Both of these are values between 0 and 1. The _Precision_ value is the fraction of returned values that were correct, and can thus be seen as a measure of the _quality_ of a algorithm. The _Recall_ value, also known as _Sensitivity_ is the fraction of relevant values that the algorithm output, thus it can be interpreted as a measure of _quantity_. Precision and Recall are in a inverse relationship, and it is usually possible to increase one of them while reducing the other by tweaking parameters of the algorithm. An example of this can be seen in @fig:varythreshold. Recall can be easily maximized to 100% by simply returning true for every given timestamp. <!--Precision can be maximized by never outputting anything, causing every predicted value to be correct. -->To solve this problem and to introduce a single scalar for measuring the performance, we use the normalized harmonic mean of precision and recall, also known as the F1-Score or F-Measure, as defined in @eq:abc.
 
@@ -494,7 +493,7 @@ $$
 $$
 
 but this only increased the noise in the training loss and did not improve the results over a simple "input $\rightarrow$ 70 neurons $\rightarrow$ 45 neurons" configuration, both for feed forward and for LSTM networks.
-The solution that worked was L2-Regularization with a factor of 0.0001. L2-Regularization places a penalty on increasing complexity of the learned model by adding the sum of the squares of the weights to the loss function. This reduced the overfitting problem greatly and slightly improved the
+The solution that worked was L2-Regularization with a factor of 0.0001. L2-Regularization places a penalty on increasing complexity (caused by overfitting) of the learned model by adding the sum of the squares of the weights to the loss function. This reduced the overfitting problem greatly and slightly improved the
 results, as can be seen in the example in @fig:l2reg.
 
 ![The same LSTM network trained without (left) and with (right) L2-Regularization. Note that without regularization the network starts overfitting after two epochs. With regularization training and validation loss mostly stay the same with regularization, and the validation error continues to improve. Training loss is blue, validation loss is red and validation error is orange. The y-axis is scaled the same for both graphs.](img/20170209000001.png){#fig:l2reg}
@@ -553,29 +552,33 @@ An interesting aspect is that in our tests the predictors had difficulty disting
 ## Binary Output
 
 We use "$70 : 35$" to denote a network layer configuration of "$\text{input} \rightarrow 70\text{ neurons} \rightarrow 35\text{ neurons} \rightarrow \text{output}$".
-All results in \autoref{fig:survey} use the following setup if not otherwise stated: LSTM, configuration: $(70 : 35)$, input features: power, pitch, FFV, context frame stride: 2, margin of error: $0\,\si{ms}$ to $+1000\,\si{ms}$. Precision, recall and F1-Score are given for the validation data set.
+All of the results in [@tbl:varycontext;@tbl:varystrides;@tbl:varyfeatures;@tbl:varylayers;@tbl:varylstm] use the following setup if not otherwise stated:
+
+- LSTM
+- Configuration: $(70 : 35)$
+- Input features: power, pitch, FFV
+- Context frame stride: 2
+- Margin of error: $0\,\si{ms}$ to $+1000\,\si{ms}$
+
+Precision, recall and F1-Score are given for the validation data set.
+
+We tested different context widths. A context width of $n\,\si{ms}$ means we use the range $[-n\,\si{ms},\allowbreak 0\,\si{ms}]$ from the beginning of the backchannel utterance. The results improved significantly when increasing the context width from our initial value of $\SI{500}{ms}$. Performance peaked with a context of about $\SI{1500}{ms}$, as can be seen in @tbl:varycontext. Longer contexts tended to cause the predictor to trigger too late.
 
 
-We tested different context widths. A context width of $n\,\si{ms}$ means we use the range $[-n\,\si{ms},\allowbreak 0\,\si{ms}]$ from the beginning of the backchannel utterance. The results improved significantly when increasing the context width from our initial value of $\SI{500}{ms}$. Performance peaked with a context of about $\SI{1500}{ms}$, as can be seen in @fig:varycontext. Longer contexts tended to cause the predictor to trigger too late.
+We tested using only every n-th frame of input data. Even though we initially did this for performance reasons, we noticed that training on every single frame has worse performance than skipping every second frame due to overfitting. Taking every fourth frame seems to miss too much information, so performance peaks at a context stride of 2, as can be seen in @tbl:varystrides.
 
+We tested different combinations of features. Using FFV as the only prosodic feature performs worse than FFV together with the absolute pitch value. Adding MFCCs does not seem to improve performance in a meaningful way when also using pitch. See @tbl:varyfeatures for more details. Note that using _only_ word2vec performs reasonably well, because with our method it indirectly encodes the time since the last utterance, similar to the power feature.
 
-We tested using only every n-th frame of input data. Even though we initially did this for performance reasons, we noticed that training on every single frame has worse performance than skipping every second frame due to overfitting. Taking every fourth frame seems to miss too much information, so performance peaks at a context stride of 2, as can be seen in @fig:varystrides.
+@tbl:varylstm shows a comparison between feed forward and LSTM networks. The parameter count is the number of connection weights the network learns in training. Note that LSTMs have significantly higher performance, even with similar parameter counts.
+We compared different layer sizes for our LSTM networks, as shown in @tbl:varylayers. A network depth of two hidden layers worked best, but the results are adequate with a single hidden layer or three hidden layers.
 
-We tested different combinations of features. Using FFV as the only prosodic feature performs worse than FFV together with the absolute pitch value. Adding MFCCs does not seem to improve performance in a meaningful way when also using pitch. See @fig:varyfeatures for more information. Note that using \emph{only} word2vec performs reasonably well, because with our method it indirectly encodes the time since the last utterance.
+In [@tbl:mueller;@tbl:ourbest], our final results are given for the completely independent evaluation data set. We compared the results by Mueller et al. (2015) [@mueller_using_2015] with our system. They used the same dataset, but focused on offline predictions, meaning their network had future information available, and they evaluated their performance on the whole corpus including segments with silence and with alternating conversation. We adjusted our baseline and evaluation system to match their setup. As can be seen in @tbl:mueller, our predictor performs better.
+All other related research used different languages, datasets or evaluation methods, making a direct comparison difficult.
 
-@Fig:varylstm shows a comparison between feed forward and LSTM networks. The parameter count is the number of connection weights the network learns in training. Note that LSTMs have significantly higher performance, even with similar parameter counts.
+@tbl:ourbest shows the results with our presented evaluation method. We provide scores for different margins of error used in other research. Subjectively, missing a BC trigger may be more acceptable than a false positive, so we also provide a result with balanced precision and recall.
 
-We compared different layer sizes for our LSTM networks, as shown in @fig:varylayers. A network depth of two hidden layers worked best, but the results are adequate with a single hidden layer or three hidden layers.
-
-In @fig:final, our final results are given for the completely independent evaluation data set. We compared the results by Mueller et al. (2015) [@mueller_using_2015] with our system. They used the same dataset, but focused on offline predictions, meaning their network had future information available, and they evaluated their performance on the whole corpus including segments with silence and with alternating conversation. We adjusted our baseline and evaluation system to match their setup. As can be seen in @fig:mueller, our predictor performs significantly better.
-All other related research used different languages, datasets or evaluation methods, making a direct comparison meaningless.
-
-@Fig:ourbest shows the results with our presented evaluation method. We provide scores for different margins of error used in other research. Subjectively, missing a BC trigger may be more acceptable than a false positive, so we also provide a result with balanced precision and recall.
-
-\begin{figure}
-\caption{Results on the Validation Set}\label{fig:survey}
-\centering
-\subfloat[Results with various context lengths. Performance peaks at 1500\,ms.]{
+\begin{table}
+    \centering
     \begin{tabular}{cccc}
     \hline\noalign{\smallskip}
     Context & Precision & Recall & F1-Score \\
@@ -586,10 +589,11 @@ All other related research used different languages, datasets or evaluation meth
     2000\,ms & 0.275 & 0.577 & 0.373 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{fig:varycontext}
-}
+    \caption{Results with various context lengths. Performance peaks at 1500\,ms.}\label{tbl:varycontext}
+\end{table}
 
-\subfloat[Results with various context frame strides]{
+\begin{table}
+    \centering
     \begin{tabular}{cccc}
     \hline\noalign{\smallskip}
     Stride & Precision & Recall & F1-Score \\
@@ -599,15 +603,16 @@ All other related research used different languages, datasets or evaluation meth
     4 & 0.285 & 0.498 & 0.363 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{fig:varystrides}
-}
+    \caption{Results with various context frame strides.}\label{tbl:varystrides}
+\end{table}
 
-\centering
-\subfloat[Results with various input features, separated into only acoustic features and acoustic plus linguistic features.]{
+\begin{table}
+    \centering
     \begin{tabular}{lccc}
     \hline\noalign{\smallskip}
     Features & Precision & Recall & F1-Score \\
     \noalign{\smallskip}\svhline\noalign{\smallskip}
+    power & 0.244 & 0.516 & 0.331 \\
     power, pitch & 0.307 & 0.435 & 0.360 \\
     power, pitch, mfcc & 0.278 & 0.514 & 0.360 \\
     power, ffv & 0.259 & 0.513 & 0.344 \\
@@ -621,14 +626,14 @@ All other related research used different languages, datasets or evaluation meth
     power, pitch, ffv, word2vec$_{dim=50}$ & 0.304 & 0.527 & 0.385 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{fig:varyfeatures}
-}
+    \caption{Results with various input features, separated into only acoustic features and acoustic plus linguistic features.}\label{tbl:varyfeatures}
+\end{table}
 
-
-\subfloat[Feed forward vs LSTM]{
+\begin{table}
+    \centering
     \begin{tabular}{ccccc}
     \hline\noalign{\smallskip}
-    Layers & Parameters & Precision & Recall & F1-Score \\
+    Layers & Parameter count & Precision & Recall & F1-Score \\
     \noalign{\smallskip}\svhline\noalign{\smallskip}
     FF ($56 : 28$) & 40k & 0.230 & 0.549 & 0.325 \\
     FF ($70 : 35$) & 50k & 0.251 & 0.468 & 0.327 \\
@@ -636,13 +641,14 @@ All other related research used different languages, datasets or evaluation meth
     LSTM ($70 : 35$) & 38k & 0.305 & 0.488 & \bf{0.375} \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{fig:varylstm}
-}
+    \caption{Feed forward vs LSTM. LSTM outperforms feed forward architectures.}\label{tbl:varylstm}
+\end{table}
 
-\subfloat[Comparison of different network configurations. Two LSTM layers give the best results.]{
+\begin{table}
+    \centering
     \begin{tabular}{cccc}
     \hline\noalign{\smallskip}
-    Layers & Precision & Recall & F1-Score \\
+    Layer sizes & Precision & Recall & F1-Score \\
     \noalign{\smallskip}\svhline\noalign{\smallskip}
     $100$ & 0.280 & 0.542 & 0.369 \\
     $50 : 20$ & 0.291 & 0.506 & 0.370 \\
@@ -651,23 +657,12 @@ All other related research used different languages, datasets or evaluation meth
     $70 : 50 : 35$ & 0.278 & 0.541 & 0.367 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{fig:varylayers}
-}
+    \caption{Comparison of different network configurations. Two LSTM layers give the best results.}\label{tbl:varylayers}
+\end{table}
 
-
-\end{figure}
-
-
-\newcommand{\csubfloat}[2][]{%
-  \makebox[0pt]{\subfloat[#1]{#2}}%
-}
-\captionsetup[subfigure]{width=\textwidth}
-\begin{figure}
-\centering
-\caption{Final best results on the evaluation set (chosen by validation set)}\label{fig:final}
-
-
-\csubfloat[Comparison with previous research. \cite{mueller_using_2015} did their evaluation without the constraints defined in \autoref{eval-1}, so we adjusted our baseline and evaluation to match their setup.]{
+\begin{table}
+    \centering
+    %\caption{Final best results on the evaluation set (chosen by validation set)}\label{tbl:final}
     \begin{tabular}{p{7cm}ccc}
     \hline\noalign{\smallskip}
         Predictor & Precision & Recall & F1-Score \\
@@ -678,10 +673,11 @@ All other related research used different languages, datasets or evaluation meth
         Our results (online, context of \SIrange{-1500}{0}{ms}) & 0.100 & 0.318 & 0.153 \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{fig:mueller}
-}
+    \caption{Comparison with previous research. \cite{mueller_using_2015} did their evaluation without the constraints defined in \autoref{eval-1}, so we adjusted our baseline and evaluation to match their setup.\label{tbl:mueller}}
+\end{table}
 
-\csubfloat[Results with our evaluation method with various margins of error used in other research \cite{de_kok_survey_2012}. Performance improves with a wider margin width and with a later margin center.]{
+\begin{table}
+    \centering
     \begin{tabular}{cp{5cm}ccc}
     \hline\noalign{\smallskip}
         Margin of Error & Constraint & Precision & Recall & F1-Score \\
@@ -697,10 +693,8 @@ All other related research used different languages, datasets or evaluation meth
          & Best F1-Score (acoustic and linguistic features) & 0.312 & 0.511 & \bf{0.388} \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
-    \label{fig:ourbest}
-}
-
-\end{figure}
+    \caption{Results with our evaluation method with various margins of error used in other research \cite{de_kok_survey_2012}. Performance improves with a wider margin width and with a later margin center.\label{tbl:ourbest}}
+\end{table}
 
 ## Multicategorical Output
 

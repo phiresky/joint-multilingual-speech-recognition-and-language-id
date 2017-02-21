@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# use `FMT=tex ./build-paper.sh` to get the .tex file
-
 export TEXINPUTS=wissdoc:
 
 rsync -a --delete img bib.bib net1.tex wissdoc/ build
