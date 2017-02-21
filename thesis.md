@@ -134,7 +134,7 @@ Collection:
 
 # Backchannel Prediction {#sec:extraction}
 
-## BC Utterance selection {#sec:extractio:subsec:bc-utterance-selection}
+## BC Utterance Selection {#sec:extractio:subsec:bc-utterance-selection}
 
 The definition of backchannels varies in literature. There are many different kinds of phrasal backchannels, they can be non-committal ("uh huh", "yeah"), positive / confirming ("oh how neat", "great"), negative / surprised ("you're kidding", "oh my god"), questioning ("oh are you", "is that right"), et cetera.
 To simplify the problem, we initially only try to predict the trigger times for any
@@ -142,7 +142,7 @@ type of backchannel, ignoring the distinction between different kinds of positiv
 responses. Later we also try to distinguish between a limited set of
 categories.
 
-## Feature selection
+## Feature Selection
 
 The most commonly used acoustic features in related research are fast and
 slow voice pitch slopes and pauses of varying lengths 
@@ -155,7 +155,7 @@ The first feature is the fundamental frequency variation spectrum (FFV) [@laskow
 
 Other features we tried include the Mel-frequency cepstral coefficients (MFCCs) with 20 dimensions, and various combinations of all of the above<!-- and a set of bottleneck features trained on phoneme recognition using a feed forward neural network, which is used for speech recognition at the Interactive Systems Lab-->.
 
-## Training area selection {#sec:selection}
+## Training Area Selection {#sec:selection}
 
 We generally assume to have two separate but synchronized audio tracks, one for the speaker and one for the listener, each with the corresponding transcriptions.
 We need to choose which areas of audio we use to train the network. As we
@@ -164,7 +164,7 @@ _online_), we need to train the network to detect segments of audio
 from the speaker track that probably cause a backchannel in the listener
 track.
 
-### Binary training areas {#sec:binary}
+### Binary Training Areas {#sec:binary}
 
 The easiest method is to choose the beginning of the utterance in the transcript of the listener channel as an anchor $t$, and then use a fixed context range of width $w$ before that as the audio range $[t-w, t]$ to train the network to predict a backchannel. The width can range from a few hundred milliseconds to multiple seconds. We feed all the extracted features for this time range into the network at once, from which it will predict if a backchannel at time $t$ is appropriate. This approach of selecting the training area is easy because it only requires searching for all backchannel utterance timestamps and then extracting the calculated range of audio. It may not be optimal though, because the delay between the last utterance of the speaker and the backchannel can vary significantly in the training data. This means it is not guaranteed that the training range will contain the actual trigger for the backchannel, which is assumed to be the last few words said by the speaker, and even if it does the last word will not be aligned within the context. This causes the need for the network to first learn to align it's input, making training harder and slower.
 
@@ -175,7 +175,7 @@ We could for example extract the center of the last speaker utterance before the
 In addition to selecting the _positive prediction area_ as defined above, we also need to choose areas to predict zero i.e. “no backchannel” (NBC). The number of training samples of this kind should be about the same amount as backchannel samples so the network is not biased towards one or the other.
 To create this balanced data set, we can choose the range a few seconds before each backchannel as a negative sample. This gives us an exactly balanced data set, and the negative samples are intuitively meaningful, because in that area the listener explicitly decided not to give a backchannel response yet, so it is sensible to assume whatever the speaker is saying is not a trigger for backchannels.
 
-### Gaussian training area
+### Gaussian Training Area
 
 The method of choosing the training areas described in @sec:binary assumes we train the network on binary values, with 1 = 100% = "Backchannel happens here" and 0 = 0% = "Definitely no backchannel happens here".
 Another approach for choosing a training area would be to not choose two separate areas to predict binary 1 and 0 values, but to instead use the area around every actual backchannel trigger and train the network on a bell curve with the center being at the ground truth with the maximum value of 1, and lower values between 0 and 1 for later and earlier values. For example, if there is a backchannel at $t=\SI{5}{s}$ and we identify $t=\SI{4.5}{s}$ as the actual trigger time, we could train the network on output=1 for a context centered at $\SI{4.5}{s}$ 0.5 for \SI{200}{ms} earlier and later and on $0 < \text{output} \ll 1$ for more distant times. This has the same problem as described above in that we would need to know the exact time of the event that triggered the backchannel. Testing this approach by simply using a fixed offset before the onset of the backchannel utterance gave far worse results than the binary training approach, so we discarded the idea in favor of concentrating on finding the optimal context ranges for the binary approach.
@@ -210,13 +210,13 @@ we interpret as the probability of a backchannel happening at the given
 time. To generate an audio track from this output, we need to convert the noisy floating probability value into discrete trigger timestamps. We first run a low-pass filter over the network output, which removes all the higher frequencies and gives us
 a less noisy and more continuous output function. 
 
-### Low-pass filtering
+### Low-pass Filtering
 
 To ensure our predictor does not use any future information, the low-pass filter must be causal. A common low-pass filter is the gaussian blur, which folds the input function with a bell curve. This filter is symmetric, which in our case means it uses future information as well as past information. To prevent this, we cut the filter of asymmetrically for the right side (that would range in the future), with a cutoff at some multiple $c$ of the standard deviation $\sigma$. Then we shift the filter to the left so the last frame it uses is $\pm\SI{0}{ms}$ from the prediction target time. This means the latency of our prediction increases by $c\cdot\sigma\,ms$. If we choose $c=0$, we cut off the complete right half of the bell curve, meaning we do not need to shift the filter, which keeps the latency at 0 at the cost of accuracy of the low-pass filter.
 
 Another possible filter to use would be exponential smoothing, defined as $s(t) = p\cdot f(t) + (1-p)\cdot s(t-1)$, where $t$ is the current time, $f$ is the original function, $s$ is the smoothed output, and $0<p<1$ is a factor describing the weighing of the current value as opposed to the past values. Even though this has the advantage of producing no latency it performed worse than the gaussian filter even with a cutoff of $c=0$. A third possibility is the Kalman Filter [@kalman_new_1960], which generally tries to predict the value of a function based on a noisy function masking the actual function. This filter has many parameters requiring tuning, so we used the described gaussian filter method instead.
 
-### Thresholding and triggering {#sec:threshold}
+### Thresholding and Triggering {#sec:threshold}
 
 After this filter we use a fixed trigger threshold to extract the ranges in the output where the predictor is fairly confident that a backchannel should happen. We trigger exactly once for each of these ranges.
 Within each range we have multiple possibilities to choose the exact trigger time point.
@@ -248,7 +248,7 @@ An example of this postprocessing procedure can be seen in @fig:postproc.
 
 For a simple subjective assessment of the results, we take some random audio segments where one person is talking in a monologue. For each segment, we remove the original listener channel and replace it with the artificial one. This audio data is generated by inserting a random backchannel audio sample at every predicted timestamp. We get these audio samples from a random speaker from the training data, keeping the speaker the same over the whole segment so it sounds like a specific person is listening to the speaker.
 
-### Objective evaluation
+### Objective Evaluation
 
 To get an objective evaluation of the performance of our predictions, we take a set of
 monologuing segments from the evaluation data set and compare the prediction
@@ -280,7 +280,7 @@ We use the F1-Score to objectively measure the performance of our prediction sys
 
 ![Varying the threshold described in @sec:threshold. The inverse relationship between precision and recall is clearly visible.](img/20170220200731.png){#fig:varythreshold}
 
-### Subjective evaluation
+### Subjective Evaluation
 
 Because the placement of backchannels is subjective, we did a subjective evaluation to complement the objective data.
 
@@ -312,7 +312,7 @@ To better understand and visualize the dataset, we first wrote a complete visual
 
 ## Extraction {#extraction-1}
 
-### Backchannel utterance selection
+### Backchannel Utterance Selection
 
 We used annotations from The Switchboard Dialog Act Corpus [@jurafsky_switchboard_1997] to
 decide which utterances to classify as backchannels. The SwDA contains
@@ -415,10 +415,10 @@ This method gives us a total of 61645
 backchannels out of 391593 utterances (15.7%) or 71207 out of 3228128
 words (2.21%). Note that the percentage of words is much lower because backchannel utterance are on average much shorter than other utterances.
 
-### Feature extraction
+### Feature Extraction
 
 
-#### Acoustic features
+#### Acoustic Features
 
 We used the Janus Recognition Toolkit [@levin_janus-iii_2000] for the acoustic feature extraction (power, pitch tracking, FFV, MFCC). The power value used is the base-10 logarithm of the raw `adc2pow` value output by the Janus Recognition Toolkit (JRTk). The pitch value is the raw value output by the Janus pitch tracker. All features are normalized so they fit in the range of $[-1, 1]$. For FFV, we used the default JRTk configuration of seven dimensions, for MFCCs the default configuration of 20 dimensions.
 
@@ -429,7 +429,7 @@ A sample of the pitch and power features can be seen in @fig:pitchpow.
 ![From top to bottom: Audio samples, transcription, pitch and power for a single audio channel. Note that the pitch value is only meaningful when the person is speaking.](img/20170208184917.png){#fig:pitchpow}
 
 
-#### Linguistic features
+#### Linguistic Features
 
 In addition to these prosodic features, we also tried training Word2Vec [@mikolov_efficient_2013] on the Switchboard dataset.
 Word2Vec is an "Efficient Estimation of Word Representations in Vector Space". After training it on a lot of text, it will learn the meaning of the words from the contexts they appear in, and then give a mapping from each word in the vocabulary to an n-dimensional vector, where n is configurable. Similar words will appear close to each other in this vector space, and it's even possible to run semantic calculations on the result. For example calculating $\mathit{king} - \mathit{man} + \mathit{woman}$ gives the result $=\mathit{queen}$ with a high confidence. Because our dataset is fairly small, we used relatively small word vectors (10 - 50 dimensions). Word2Vec automatically chooses a fitting vocabulary size. For words not in the vocabulary, we output 0 on all dimensions. We trained Word2Vec only on utterances that are not backchannels or silence to reduce the required vocabulary and prevent it from learning about meta information such as pauses, noises and laughter on its own.
@@ -438,7 +438,7 @@ We extracted these features parallel to those output by Janus, with a 10 millise
 
 ![five-dimensional Word2Vec feature for some text. The encoding is offset by one word, for example the encoding for "twenty" is seen below the word "four", because we encode the word that _ended_ before the current time. Note that with this method we indirectly encode the length of the words and the time since the last word change.](img/20170216222513.png){#fig:w2v}
 
-#### Context and stride
+#### Context and Stride
 
 We extract the features for a fixed time context. Then we use a subset of that range as the area we feed into the network. 
 As an example, we could extract the range $[\SI{-2000}{ms}, \SI{0}{ms}]$ for every feature, giving us 200 frames. To train the network on \SI{1500}{ms} of context, we would treat every offset like $[\SI{-2000}{ms},\allowbreak \SI{-500}{ms}],\allowbreak [\SI{-1990}{ms},\allowbreak \SI{-490}{ms}], \dots,\allowbreak [\SI{-1500}{ms}, \SI{0}{ms}]$ as individual training samples. This would give us 50 training samples per backchannel utterance, greatly increasing the amount of training data, but introducing smear as the network needs to learn to handle a larger variance in when the backchannel cue appears in its inputs, and thus reducing the confidence of its output.
@@ -470,7 +470,7 @@ We tried different weight initialization methods. Initializing all weights with 
 
 We compared online prediction and offline "prediction", where offline prediction got \SI{400}{ms} of past audio and \SI{400}{ms} of future audio from the onset of the backchannel utterance, and online prediction got \SI{800}{ms} of past audio. Offline prediction gave 18% better results, but of course we are more interested in online prediction.
 
-## Recurrent neural networks
+## Recurrent Neural Networks
 
 The first LSTM we tested by simply replacing the feed forward layers with LSTM layers immediately improved the results by 16% without any further adjustments. We kept the default configuration of using "Peepholes" [@gers_learning_2003] and used only forward facing layers (connections from past to future). But this showed the issues with a fixed learning rate, as the gradient regularily exploded after every 10 to 15 epochs, as can be seen in @fig:exploding. When adding FFV, increasing the input dimension per time frame from 2 to 9, SGD stopped working at all (everything became NaN) without manually tuning the learning rate. One solution to this would be to use a scheduler. A scheduler automatically adjusts the learning rate depending on some condition. An example is simple exponential decay, which exponentially decreases the initial learning rate with a fixed factor. Another method is newbob scheduling, which exponentially decreases the learning rate when the validation error stops decreasing or only decreases very little. These schedulers need parameter tuning, making them hard to use without a lot of experimenting.
 
@@ -493,7 +493,7 @@ results, as can be seen in the example in @fig:l2reg.
 
 ![The same LSTM network trained without (left) and with (right) L2-Regularization. Note that without regularization the network starts overfitting after two epochs. With regularization training and validation loss mostly stay the same with regularization, and the validation error continues to improve. Training loss is blue, validation loss is red and validation error is orange. The y-axis is scaled the same for both graphs.](img/20170209000001.png){#fig:l2reg}
 
-### Multicategorical data
+### Multicategorical Data
 
 Everything above assumes we only predict two categories: Non-BC and BC. To extend this to multiple categories, we can use the same output layer setup with more dimensions, because softmax works for any number of categories. 
 
@@ -544,7 +544,7 @@ An interesting aspect is that in our tests the predictors had difficulty disting
 
 # Results
 
-## Binary output
+## Binary Output
 
 We use "$70 : 35$" to denote a network layer configuration of "$\text{input} \rightarrow 70\text{ neurons} \rightarrow 35\text{ neurons} \rightarrow \text{output}$".
 All results in \autoref{fig:survey} use the following setup if not otherwise stated: LSTM, configuration: $(70 : 35)$, input features: power, pitch, FFV, context frame stride: 2, margin of error: $0\,\si{ms}$ to $+1000\,\si{ms}$. Precision, recall and F1-Score are given for the validation data set.
@@ -696,7 +696,7 @@ All other related research used different languages, datasets or evaluation meth
 
 \end{figure}
 
-## Multicategorical output
+## Multicategorical Output
 
 We evaluated the results for multicategorical output using confusion matrices. A confusion matrix shows how many samples that should be categorized as one category are categorized as another category for every combination of categories.
 
@@ -748,7 +748,7 @@ Some state presets are also available, such as the default view which will show 
 ![Loading the output of the best epoch of specific network for channel A of the current conversation](img/20170211161913.png){#fig:loadingnn width=70%}
 
 
-### Implementation
+### Implementation Details
 
 The visualizer is split into two parts, the server side (backend) and the client side (frontend). The server is written in python. It accepts connections via Websockets. It sends a list of available conversation IDs and corresponding features. The client can then select a conversation and dynamically load any combination of the available features, which the server will evaluate on demand while caching the most recently used features. The backend is in a shared code base with the extraction code, so it uses parts of the same code we also use for training and evaluation.
 
@@ -761,7 +761,7 @@ The client is written in TypeScript with MobX and React and runs in a web browse
 We wrote our own parsing toolkit for the transcriptions and word alignments from the SwDA [@jurafsky_switchboard_1997], which are formatted as plain text files.
 We used the Python interface of the Janus Recognition Toolkit, numpy, scipy and sklearn for feature extraction and filters. We implemented a small learning toolkit on top of Lasagne that reads the extraction and training configuration from a JSON file and outputs the training history as JSON. We used git to track the changes and git tags so every extraction and training output had the exact state of the code attached. This allowed us to easily reproduce different outputs. We also wrote a meta configuration generator, that takes a set of interesting configuration parameters and outputs all the relevant permutations, which can then be extracted, trained and evaluated in parallel.
 
-### Automatic caching
+### Automatic Caching
 
 Many of the methods for extraction were written as pure functions, which allowed us to create a transparent caching system as a python function decorator that automatically caches the result of expensive functions on disk. For example, consider this function:
 
