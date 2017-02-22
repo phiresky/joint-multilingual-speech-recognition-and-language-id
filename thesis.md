@@ -10,25 +10,26 @@ title: |
     Networks
 figPrefix: ["Figure", "Figures"]
 tblPrefix: ["Table", "Tables"]
+secPrefix: ["Section", "Sections"]
 ---
 
 # Introduction
 
-A listener backchannel is generally defined as any kind of feedback a listener
+When listening to someone, we find ourselves wanting to express sympathy or to acknowledge or reject what we are being told. This form of feedback is called a _backchannel_. The term stems from the idea that we complement the dominant channel of the conversation by the speaker with a secondary response channel. While the dominant channel directs the primary speech flow, the backchannel provides feedback about the current state of the listener with regards to their interest and opinion about the conversation topic.
+
+A backchannel is generally defined as any kind of feedback a listener
 gives a speaker as an acknowledgment in a segment of conversation that is primarily one-way.
 They include but are not limited to nodding [@watanabe_voice_1989], a shift in the gaze direction, and short phrases (“uh-huh”, “hum", “yeah", “right”, etc.). Backchannels are said to help build rapport, which is the feeling of comfortableness or being "in sync" with conversation partners [@huang_virtual_2011].
+Artificial assistants like Siri, Alexa, etc. are becoming increasingly popular, but they are still distinctively non-human. Social dialogs are much less well understood than goal-directed ones. They do not necessarily aim for a particular outcome, other than indirect goals of building sympathy, bonding or mutual entertainment. Adding backchannel responses could help make a conversation with an artificial assistant feel more natural.
 
-This thesis concentrates on short phrasal backchannels consisting
+We concentrates on short phrasal backchannels consisting
 of a maximum of three words. We try to predict these for a given speaker
-audio channel in a causal way, using only past information. This allows the predictor to be used in an online environment.
+audio channel in a causal way, using only past information. This allows the predictor to be used in an online environment. This thesis is structured as follows. In @sec:related-work, we provide an overview of related research. In @sec:theoretical, we show our general approach, describing our methods for extraction, training, postprocessing and evaluation. @sec:experiments is a detailed description of the experiments we conducted. The results of these experiments are shown in @sec:results. @sec:implementation contains descriptions and technical details of the software components we implemented in the course of this thesis.
 
-
-Artificial assistants like Siri, Alexa, etc. are becoming increasingly popular, but they are still distinctively unhuman. Adding backchannel responses could help make a conversation with an artificial assistant feel more natural.
-
-# Related Work
+# Related Work {#sec:related-work}
 
 Most related work is either completely rule-based or uses at least some manual components in combination with data-driven learning.
-@ward_prosodic_2000 were the first to propose specific rules for when to produce backchannel feedback based on acousting cues:
+@ward_prosodic_2000 were the first to propose specific rules for when to produce backchannel feedback based on acoustic cues:
 
 > "[...] we formulate
 > the following predictive rule for English:
@@ -43,9 +44,9 @@ Most related work is either completely rule-based or uses at least some manual c
 >
 > you should produce back-channel feedback." [@ward_prosodic_2000]
 
-These rules were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted multiple different pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 with only acoustic features to 0.221. [@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-taking and turn-keeping without a backchannel.
+These rules contain many variables tuned for english speech, based on the general pitch and pause information. They were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted multiple different pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 with only acoustic features to 0.221. [@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-taking and turn-keeping without a backchannel.
 
-A lot of related research is based on Japanese speech [@okato_insertion_1996; @ward_using_1996; @ward_prosodic_2000; @fujie_conversation_2004;@takeuchi_timing_2004;@kitaoka_response_2005;@nishimura_spoken_2007], some on English speech [@ward_prosodic_2000;@morency_predicting_2008;@de_kok_multimodal_2009;@huang_learning_2010; @ozkan_concensus_2010; @ozkan_latent_2010] and some on Dutch speech [@morency_probabilistic_2010; @de_kok_learning_2010].
+A lot of related research is based on Japanese speech [@okato_insertion_1996; @ward_using_1996; @ward_prosodic_2000; @fujie_conversation_2004;@takeuchi_timing_2004;@kitaoka_response_2005;@nishimura_spoken_2007], some on English speech [@ward_prosodic_2000;@morency_predicting_2008;@de_kok_multimodal_2009;@huang_learning_2010; @ozkan_concensus_2010; @ozkan_latent_2010], and some on Dutch speech [@morency_probabilistic_2010; @de_kok_learning_2010].
 
 
 Rule-based approaches can be inflexible, error-prone and involve a lot of manual fine-tuning. A first approach for distinguishing different speech acts, including BCs, using a combination of hidden markov models and neural networks was proposed by @ries_hmm_1999.
@@ -131,7 +132,7 @@ Collection:
 
 -->
 
-# Backchannel Prediction {#sec:extraction}
+# Backchannel Prediction {#sec:theoretical}
 
 ## BC Utterance Selection {#sec:extractio:subsec:bc-utterance-selection}
 
@@ -193,7 +194,7 @@ We then calculate categorical cross-entropy of the output values of the network 
 
 In the simplest case (ignoring different kinds of backchannels) we train the network on the outputs $[1, 0]$ for backchannels and $[0, 1]$ for non-backchannels. When evaluating we can ignore the second dimension of this output, simply interpreting the first dimension as a probability. A visualization of this architecture can be seen in @fig:nn_2h. In the following sections we will concentrate on this architecture.
 
-\input{net1}
+\input{img/net1}
 
 The placement of backchannels is dependent on previous backchannels: If
 the previous backchannel utterance was a long time ago, the probability of a
@@ -291,7 +292,7 @@ The results of this were combined to calculate the average F1-Score of humans.
 Secondly, we asked humans to rate the output of the machine predictions on a scale of one two five with one being "completely unnatural" and five being "completely natural".
 
 
-# Experimental Setup {#experiments}
+# Experimental Setup {#sec:experiments}
 
 ## Dataset
 
@@ -547,7 +548,7 @@ The results did not significantly change when adjusting this minimum length betw
 
 An interesting aspect is that in our tests the predictors had difficulty distinguishing segments of speech that indicate a backchannel and those that indicate a turn taking (speaker change). Subjectively this makes sense, because in many cases a backchannel can be seen as a replacement for starting to talk more extensively.
 
-# Results
+# Results {#sec:results}
 
 ## Binary Output
 
@@ -721,7 +722,7 @@ positive                         & 113        & 43           & 25          & 78 
 \end{table}
 
 
-# Implementation
+# Implementation {#sec:implementation}
 
 We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results. This software was also used to create most of the figures in this document.
 
@@ -797,7 +798,7 @@ This program is completely client-side and runs in the webbrowser, loading all n
 
 ![Precision, Recall and F1-Score depending on the minimum monologuing segment length. -1 has the symbolic meaning that we evaluate on all data, including silence.](img/20170212132651.png){#fig:varymonologuing}
 
-# Conclusion and Future Work
+# Conclusion and Future Work {#sec:conclusion}
 
 We have presented a novel approach to predict backchannels using acoustic and linguistic features. We experimented with different neural network designs and feature combinations to find the best method. The use of recurrent neural networks (LSTMs) greatly increased the performance of our predictions.
 
