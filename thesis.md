@@ -44,15 +44,15 @@ Most related work is either completely rule-based or uses at least some manual c
 >
 > you should produce back-channel feedback." [@ward_prosodic_2000]
 
-These rules contain many variables tuned for english speech, based on the general pitch and pause information. They were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted multiple different pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 with only acoustic features to 0.221. [@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-taking and turn-keeping without a backchannel.
+These rules contain many variables tuned for English speech, based on the general pitch and pause information. They were used as a basis and a comparison in many following publications. In general, most related work is based on some variations of pitch and pause, for example [@morency_probabilistic_2010] extracted multiple different pitch slope features and binary pause regions and then trained sequential probabilistic models like Hidden Markov Models or Conditional Random Fields to extract the relevant subset of those features. They additionally included eye gaze and head movement features, which increased their F1-Score from 0.206 with only acoustic features to 0.221. [@takeuchi_timing_2004] trained a decision tree with the C4.5 learning algorithm to distinguish between backchannel responses, turn-taking and turn-keeping without a backchannel.
 
-A lot of related research is based on Japanese speech [@okato_insertion_1996; @ward_using_1996; @ward_prosodic_2000; @fujie_conversation_2004;@takeuchi_timing_2004;@kitaoka_response_2005;@nishimura_spoken_2007], some on English speech [@ward_prosodic_2000;@morency_predicting_2008;@de_kok_multimodal_2009;@huang_learning_2010; @ozkan_concensus_2010; @ozkan_latent_2010], and some on Dutch speech [@morency_probabilistic_2010; @de_kok_learning_2010].
+A lot of related research is based on Japanese speech [@okato_insertion_1996] [@ward_using_1996] [@ward_prosodic_2000] [@fujie_conversation_2004] [@takeuchi_timing_2004] [@kitaoka_response_2005] [@nishimura_spoken_2007]. Some is based on English speech [@ward_prosodic_2000] [@morency_predicting_2008] [@de_kok_multimodal_2009] [@huang_learning_2010] [@ozkan_concensus_2010] [@ozkan_latent_2010], and some on Dutch speech [@morency_probabilistic_2010] [@de_kok_learning_2010].
 
 
 Rule-based approaches can be inflexible, error-prone and involve a lot of manual fine-tuning. A first approach for distinguishing different speech acts, including BCs, using a combination of hidden markov models and neural networks was proposed by @ries_hmm_1999.
 Previous work at this institute also includes using a feed-forward neural network for backchannel detection [@mueller_using_2015], though this work focused on offline "prediction", meaning their input features included sections of audio happening during or after the backchannel, making it unsuitable for a real-time environment.
 
-@de_kok_survey_2012 compared different evaluation metrics for backchannel predictors. As an objective evaluation method, the use of the F1-Score has been established, but the margin of error to accept a prediction as correct varies. Together with the fact that no one standard data set exists this makes a comparison between different evaluation results hard.
+@de_kok_survey_2012 compared different evaluation metrics for backchannel predictors. As an objective evaluation method, the use of the F1-Score has been established. Most research uses a fixed margin of error to accept a prediction as correct. The width of this margin ranges from \SI{400}{ms} to \SI{1000}{ms}, and the center of the margin of error ranges from $\pm\SI{0}{ms}$ to +\SI{500}{ms}. This means some research accepts a far larger latency (up to one second) than other research (up to \SI{200}{ms}). Together with the fact that no one standard data set exists, this makes a comparison between different evaluation results hard.
 <!--
 Collection:
 
@@ -231,7 +231,7 @@ When we have the trigger anchor, we can either immediately trigger, or delay the
 
 An example of this postprocessing procedure can be seen in @fig:postproc.
 
-![Example of the postprocessing process. The top shows the input audio channel together with the corresponding transcriptions. The raw output of the neural network is fairly noisy, so we smooth it. The highlighted range on the smoothed output is where the value is larger than 0.6. We trigger at the first local maximum of this range, outputting an "uh-hum" sound sample.](img/postprocessing.pdf){#fig:postproc}
+![Example of the postprocessing process. The top shows the input audio channel together with the corresponding transcriptions. The raw output of the neural network is fairly noisy, so we smooth it. The highlighted range on the smoothed output is where the value is larger than 0.7. We trigger at the first local maximum of this range, outputting an "uh-hum" sound sample.](img/postprocessing.pdf){#fig:postproc}
 
 
 <!--\begin{figure}
@@ -282,15 +282,24 @@ We use the F1-Score to objectively measure the performance of our prediction sys
 ### Subjective Evaluation
 
 Because the placement of backchannels is subjective, we did a subjective evaluation to complement the objective data.
+We first extracted all monologuing segments of more than fifteen seconds from the evaluation data set that contained at least three backchannels. Then we randomly picked six of these, excluding those that contained noise leaking from from one channel to the other. The picked segments were of an average length of 30 seconds. For each segment, we generated three versions of audio:
 
-We concentrated on two methods:
+1. Neural net predictor: Predictions from our best trained LSTM according to the objective evaluation
+2. Ground truth predictor: Predictions as read from the real backchannel audio track
+3. Random predictor (baseline): For each segment, we read the real backchannel count, and then uniformly distributed those throughout the segment. Note that this method actually has additional information compared to the neural net predictor because it knows the real backchannel count.
 
-First, we evaluated human performance with the same evaluation method we used for our predictors.
+For each of these, we generated the backchannel audio track by putting a backchannel audio sample at each trigger time. We then down-mixed the speaker and artificial listener channel to mono mp3 file to maximize accessibility.
+We chose the backchannel audio samples randomly from all neutral backchannels with a minimum loudness in a fixed set of 11 conversations that had a lot of neutral backchannels without leaking audio.
+
+This gave us a total of $6\cdot3=24$ audio files. For every participant we randomly selected six audio files so that everyone heard two samples of every method (Truth, Random, NN) and heard every speaker track exactly once. The order was shuffled to remove any structural effects.
+Then we asked the participants to rate the audio samples by how natural it sounded in general and how appropriate they thought the backchannel timing was. A screenshot of the survey interface can be seen in @fig:bcsurvey.
+
+![Screenshot of the survey interface.](img/survey.png){#fig:bcsurvey}
+
+
+<!--First, we evaluated human performance with the same evaluation method we used for our predictors.
 Participants first chose a backchannel track. Whenever they pressed the spacebar, a random audio sample from their selected track would play. Then they listened to ten monologuing audio segments of more than 15 seconds and could give backchannel responses.
-The results of this were combined to calculate the average F1-Score of humans.
-
-Secondly, we asked humans to rate the output of the machine predictions on a scale of one two five with one being "completely unnatural" and five being "completely natural".
-
+The results of this were combined to calculate the average F1-Score of humans.-->
 
 # Experimental Setup {#sec:experiments}
 
