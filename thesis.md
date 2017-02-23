@@ -282,7 +282,7 @@ We use the F1-Score to objectively measure the performance of our prediction sys
 ### Subjective Evaluation
 
 Because the placement of backchannels is subjective, we did a subjective evaluation to complement the objective data.
-We first extracted all monologuing segments of more than fifteen seconds from the evaluation data set that contained at least three backchannels. Then we randomly picked six of these, excluding those that contained noise leaking from from one channel to the other. The picked segments were of an average length of 30 seconds. For each segment, we generated three versions of audio:
+We first extracted all monologuing segments of more than fifteen seconds from the evaluation data set where the ground truth contained at least three backchannels. Then we randomly picked six of these, excluding those that contained noise leaking from from one channel to the other. The picked segments were of an average length of 30 seconds. For each segment, we generated three versions of audio:
 
 1. Neural net predictor: Predictions from our best trained LSTM according to the objective evaluation
 2. Ground truth predictor: Predictions as read from the real backchannel audio track
