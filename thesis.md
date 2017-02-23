@@ -286,7 +286,7 @@ We first extracted all monologuing segments of more than fifteen seconds from th
 
 1. Neural net predictor: Predictions from our best trained LSTM according to the objective evaluation
 2. Ground truth predictor: Predictions as read from the real backchannel audio track
-3. Random predictor (baseline): For each segment, we read the real backchannel count, and then uniformly distributed those throughout the segment. Note that this method actually has additional information compared to the neural net predictor because it knows the real backchannel count.
+3. Random predictor (baseline): For each segment, we read the real backchannel count, and then uniformly distributed those throughout the segment. Note that this method actually has additional information compared to the neural net predictor because it knows the expected backchannel count.
 
 For each of these, we generated the backchannel audio track by putting a backchannel audio sample at each trigger time. We then down-mixed the speaker and artificial listener channel to mono mp3 file to maximize accessibility.
 We chose the backchannel audio samples randomly from all neutral backchannels with a minimum loudness in a fixed set of 11 conversations that had a lot of neutral backchannels without leaking audio.
