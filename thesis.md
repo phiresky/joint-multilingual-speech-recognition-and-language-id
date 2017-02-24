@@ -1,17 +1,20 @@
 ---
 # this document is pandoc-1.19-flavored markdown
 author:
-- 'Robin'
+- Robin
 bibliography:
-- 'bib.bib'
+- bib.bib
 lang: en-US
 title: |
     Backchannel Prediction for Conversational Speech Using Recurrent Neural
     Networks
-figPrefix: ["Figure", "Figures"]
-tblPrefix: ["Table", "Tables"]
-secPrefix: ["Section", "Sections"]
+figPrefix: [Figure, Figures]
+tblPrefix: [Table, Tables]
+secPrefix: [Section, Sections]
+abstract:
+    Backchannels are a method for the listener of a conversation to give feedback without taking the turn. This thesis describes the process of the creation of a prediction system for backchannel responses. We trained neural networks to detect segments of speech that are cues for backchannels using acoustic and linguistic input features, and to emit a trigger signal whenever appropriate. We compared the performance of various feature combinations and found the optimal layer configurations and context lengths. We evaluated the performance of our system objectively using the F1-Score and subjectively in a survey, showing it performs significantly better than a random baseline.
 ---
+
 
 # Introduction
 
@@ -588,7 +591,7 @@ We compared different layer sizes for our LSTM networks, as shown in @tbl:varyla
 In [@tbl:mueller;@tbl:ourbest], our final results are given for the completely independent evaluation data set. We compared the results by Mueller et al. (2015) [@mueller_using_2015] with our system. They used the same dataset, but focused on offline predictions, meaning their network had future information available, and they evaluated their performance on the whole corpus including segments with silence and with alternating conversation. We adjusted our baseline and evaluation system to match their setup. As can be seen in @tbl:mueller, our predictor performs better.
 All other related research used different languages, datasets or evaluation methods, making a direct comparison difficult.
 
-@tbl:ourbest shows the results with our presented evaluation method. We provide scores for different margins of error used in other research. Subjectively, missing a BC trigger may be more acceptable than a false positive, so we also provide a result with balanced precision and recall.
+@tbl:ourbest shows the results with our presented evaluation method. We provide scores for different margins of error used in other research. Subjectively, missing a BC trigger may be more acceptable than a false positive, so we also provide a result with balanced precision and recall. Welch's t-test shows that the difference of our F1-Score of 0.388 to that of the random baseline (0.071) is statistically significant with $p<0.0001\%$.
 
 \input{tbl/objectiveResults.tex}
 
