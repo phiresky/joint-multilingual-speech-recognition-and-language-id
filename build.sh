@@ -2,7 +2,7 @@
 
 export TEXINPUTS=wissdoc:
 
-rsync -a --delete img bib.bib template/ build
+rsync -a --delete img tbl template/ bib.bib build
 
 pandoc \
 	thesis.md \

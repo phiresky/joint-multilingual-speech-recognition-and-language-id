@@ -291,7 +291,7 @@ We first extracted all monologuing segments of more than fifteen seconds from th
 For each of these, we generated the backchannel audio track by putting a backchannel audio sample at each trigger time. We then down-mixed the speaker and artificial listener channel to mono mp3 file to maximize accessibility.
 We chose the backchannel audio samples randomly from all neutral backchannels with a minimum loudness in a fixed set of 11 conversations that had a lot of neutral backchannels without leaking audio.
 
-This gave us a total of $6\cdot3=24$ audio files. For every participant we randomly selected six audio files so that everyone heard two samples of every method (Truth, Random, NN) and heard every speaker track exactly once. The order was shuffled to remove any structural effects.
+This gave us a total of $6\cdot3=24$ audio files. For every participant we randomly selected six audio files so that everyone heard every speaker track exactly once and two samples of every method (Truth, Random, NN). The order was shuffled to remove any structural effects.
 Then we asked the participants to rate the audio samples by how natural it sounded in general and how appropriate they thought the backchannel timing was. A screenshot of the survey interface can be seen in @fig:bcsurvey.
 
 ![Screenshot of the survey interface.](img/survey.png){#fig:bcsurvey}
@@ -559,7 +559,26 @@ An interesting aspect is that in our tests the predictors had difficulty disting
 
 # Results {#sec:results}
 
-## Binary Output
+## Subjective Results
+
+The detailed results of the survey can be seen in @tbl:surveyresults.
+The results show that our neural network performs significantly better regarding timing than a random predictor ($p=0.02\%$), but significantly worse than human performance ($p=0.1\%$). For _naturalness_, our predictor is not significantly better than random performance ($p=13\%$), as shown in @tbl:surveysig.
+
+\begin{table}
+    \centering
+    \input{tbl/surveyResult.tex}
+    \caption{Survey results.\label{tbl:surveyresults}}
+\end{table}
+
+\begin{table}
+    \centering
+    \input{tbl/surveySignificance.tex}
+    \caption{Comparing performance of the predictors using Welch's t-test on the survey results, showing they are highly significant.\label{tbl:surveysig}}
+\end{table}
+
+## Objective Results
+
+### Binary Output
 
 We use "$70 : 35$" to denote a network layer configuration of "$\text{input} \rightarrow 70\text{ neurons} \rightarrow 35\text{ neurons} \rightarrow \text{output}$".
 All of the results in [@tbl:varycontext;@tbl:varystrides;@tbl:varyfeatures;@tbl:varylayers;@tbl:varylstm] use the following setup if not otherwise stated:
@@ -706,7 +725,7 @@ All other related research used different languages, datasets or evaluation meth
     \caption{Results with our evaluation method with various margins of error used in other research \cite{de_kok_survey_2012}. Performance improves with a wider margin width and with a later margin center.\label{tbl:ourbest}}
 \end{table}
 
-## Multicategorical Output
+### Multicategorical Output
 
 We evaluated the results for multicategorical output using confusion matrices. A confusion matrix shows how many samples that should be categorized as one category are categorized as another category for every combination of categories.
 
