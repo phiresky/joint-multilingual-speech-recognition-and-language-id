@@ -356,32 +356,8 @@ We chose to use the top 150 unique utterances from this set. For the most common
 
 \begin{figure}
 \centering
-    \begin{tabular}{rrrll}
-    \hline\noalign{\smallskip}
-    aggregated & self & count & category & text \\
-    \noalign{\smallskip}\svhline\noalign{\smallskip}
-    31.9\% & 31.9\% & 14319 & b & uh-huh \\
-    61.1\% & 29.2\% & 13075 & b & yeah \\
-    69.0\% & 7.9\% & 3532 & b & right \\
-    71.7\% & 2.8\% & 1249 & b & oh \\
-    73.7\% & 2.0\% & 877 & b & [silence] \\
-    75.1\% & 1.4\% & 629 & b & oh yeah \\
-    76.5\% & 1.4\% & 627 & b & yes \\
-    77.8\% & 1.4\% & 607 & b & okay \\
-    78.9\% & 1.0\% & 458 & bk & okay \\
-    79.8\% & 0.9\% & 399 & b & huh \\
-    80.6\% & 0.8\% & 364 & b & sure \\
-    81.3\% & 0.7\% & 325 & bk & oh okay \\
-    82.0\% & 0.6\% & 288 & b & huh-uh \\
-    82.6\% & 0.6\% & 282 & bh & oh really \\
-    83.2\% & 0.6\% & 264 & ba & wow \\
-    83.7\% & 0.6\% & 259 & b & um \\
-    84.2\% & 0.4\% & 193 & bh & really \\
-    84.6\% & 0.4\% & 186 & b & really \\
-    85.0\% & 0.4\% & 177 & bk & oh \\
-    \noalign{\smallskip}\hline\noalign{\smallskip}
-    \end{tabular}
-    \caption{Most common backchannel utterances in the SwDA dataset. bk = Response Acknowledgement, bh = Backchannel in question form, ba = Appreciation.}\label{tbl:bcs}
+    \input{tbl/bcs}
+    \caption{Most common backchannel utterances in the SwDA dataset. bk = Response Acknowledgement, bh = Backchannel in question form, ba = Appreciation.\label{tbl:bcs}}
 \end{figure}
 
 
@@ -561,7 +537,7 @@ An interesting aspect is that in our tests the predictors had difficulty disting
 
 ## Subjective Results
 
-The detailed results of the survey can be seen in @tbl:surveyresults.
+A total of 19 participants participated in the survey, mostly from the university group _Machine Learning Karlsruhe_. Because every participant rated two samples for every evaluation method, this gives us a sample size of $N=38$. The detailed results of the survey can be seen in @tbl:surveyresults.
 The results show that our neural network performs significantly better regarding timing than a random predictor ($p=0.02\%$), but significantly worse than human performance ($p=0.1\%$). For _naturalness_, our predictor is not significantly better than random performance ($p=13\%$), as shown in @tbl:surveysig.
 
 \begin{table}
@@ -573,7 +549,7 @@ The results show that our neural network performs significantly better regarding
 \begin{table}
     \centering
     \input{tbl/surveySignificance.tex}
-    \caption{Comparing performance of the predictors using Welch's t-test on the survey results, showing they are highly significant.\label{tbl:surveysig}}
+    \caption{Comparing performance of the predictors using Welch's t-test on the survey results, showing the differences in the mean of the rating between prediction methods are all highly significant regarding timing.\label{tbl:surveysig}}
 \end{table}
 
 ## Objective Results
@@ -734,16 +710,16 @@ A confusion matrix for the best network configuration from above fine-tuned for 
 \begin{table}[]
 \centering
 \begin{tabular}{lrrrrrr}
-    \hline\noalign{\smallskip}
+\hline\noalign{\smallskip}
 {\small correct \textbackslash\  predicted} & No BC & neutral& question    & surp/neg          & affirmative & positive    \\
-    \noalign{\smallskip}\svhline\noalign{\smallskip}
+\noalign{\smallskip}\svhline\noalign{\smallskip}
 No BC                            & ---        & 2695         & 930         & 4018              & 1600        & 2697        \\
 neutral                          & 1417       & \textbf{640} & 377         & 1057              & 366         & 341         \\
 question                         & 31         & 16           & \textbf{14} & 24                & 8           & 12          \\
 surp/neg                         & 99         & 35           & 24          & \textbf{120}      & 14          & 25          \\
 affirmative                      & 55         & 23           & 21          & 52                & \textbf{17} & 18          \\
 positive                         & 113        & 43           & 25          & 78                & 24          & \textbf{20} \\
-    \noalign{\smallskip}\hline\noalign{\smallskip}
+\noalign{\smallskip}\hline\noalign{\smallskip}
 \end{tabular}
 \caption{Confusion matrix for a LSTM with the output layer finetuned to distinguish between multiple categories, trained on balanced training data.}
 \label{tbl:confusionmatrix}
@@ -828,7 +804,7 @@ This program is completely client-side and runs in the webbrowser, loading all n
 
 # Conclusion and Future Work {#sec:conclusion}
 
-We have presented a novel approach to predict backchannels using acoustic and linguistic features. We experimented with different neural network designs and feature combinations to find the best method. The use of recurrent neural networks (LSTMs) greatly increased the performance of our predictions.
+We have presented a novel approach to predict backchannels using acoustic and linguistic features. We experimented with different neural network designs and feature combinations to find the best method. The use of recurrent neural networks (LSTMs) greatly increased the performance of our predictions. We showed our results are subjectively significantly better than random predictions.
 
 There are some points where further improvements could be made.
 We only scraped the surface of adding linguistic features via word2vec because it assumes the availability of an instant speech recognizer. In our system we simply used the available hand-written transcripts, but in a real online environment this would need a more sophisticated approach. Further work is needed to evaluate other methods for adding word vectors to the input features and to analyse problems with our approach.
@@ -839,7 +815,7 @@ Our approach of choosing the training areas may not be optimal because the delay
 
 Our tests of predicting multiple separate categories of BCs did not produce any notable results, further work is needed to analyse whether more context or features are needed to facilitate this. 
 
-Because backchannels are a largely subjective phenomenon, a user study would be helpful to subjectively evaluate the performance of our predictor and to compare it with human performance in our chosen evaluation method. Another method would be to find consensus for backchannel triggers by combining the predictions of multiple human subjects for a single speaker channel as described by Huang et al. as "parasocial consensus sampling" [@huang_parasocial_2010].
+Because backchannels are a largely subjective phenomenon, a user study would be helpful to subjectively evaluate human performance in our chosen evaluation method. Another method would be to find consensus for backchannel triggers by combining the predictions of multiple human subjects for a single speaker channel as described by Huang et al. as "parasocial consensus sampling" [@huang_parasocial_2010].
 
 An interesting extension for use in Virtual Assistants would be to also predict turn taking in addition to backchannels. Our current model already often predicts a backchannel at a time where the speaker stops talking and expects a longer response. Our current model of predicting [No BC, BC] could be extended to predict [No BC, BC, Speaker Change]. This would allow a virtual assistant to give natural sounding backchannel responses and detect when it is supposed to start answering a query.
 
