@@ -635,10 +635,11 @@ In addition, it can also show time-aligned textual labels either as seperate fea
 
 The user can choose a specific or random conversation from the training, validation or evaluation data set. Then they can choose to view a combination of the available features from a categorical tree (@fig:categories). The user can zoom into any section of the data and play the audio, the UI will follow the current playback position.
 
-\begin{wrapfigure}[23]{R}{0.3\textwidth}
+\begin{wrapfigure}{R}{0.3\textwidth}
 \centering
 \includegraphics{img/20170211154422.png}
 \caption{Selecting a feature to display in the Web Visualizer.\label{fig:categories}}
+\vspace{-2cm}
 \end{wrapfigure}
 
 The user can also save the exact current GUI state including zoom and playback position to generate a unique URL that will restore the visualizer to that state when loaded. This is useful for sharing and saving interesting sections.
@@ -710,16 +711,16 @@ This program is completely client-side and runs in the webbrowser, loading all n
 ## Survey software
 
 
-The survey software is written in Typescript with SQLite, TypeORM, Express.js, MobX and React. It loads a set of audio files as output by the software described in @sec:evalsoftware. It creates a remapping from an incrementing counter to each of these files, so survey participants cannot be biased by knowing what they are listening to. It stores the ratings for each participants together with their comment into an SQLite database. It also has an admin interface which shows an automatically updating dynamic pivot table of the current survey results, showing the average ratings depending on choosable dimensions (e.g. average ratings for each predictor for each audio sample). It can then also export this table to \LaTeX{} format, as seen in @tbl:surveyresults.
+The survey software is written in Typescript with SQLite, TypeORM, Express.js, MobX and React. It loads a set of audio files as output by the software described in @sec:evalsoftware. It creates a remapping from an incrementing counter to each of these files, so survey participants cannot be biased by knowing what they are listening to. It stores the ratings for each participants together with their comment into an SQLite database. It also has an admin interface which shows an automatically updating interactive pivot table of the current survey results, showing the average ratings depending on choosable dimensions (e.g. average ratings for each predictor for each audio sample). It can then also export this table to \LaTeX{} format, as seen in @tbl:surveyresults.
 
 A second component, written in python does the significance test by loading the results from the SQLite database and outputting a \LaTeX{} table for the significance of the difference between each rating type and predictor combination, as shown in @tbl:surveysig.
 
 # Conclusion and Future Work {#sec:conclusion}
 
-We have presented a novel approach to predict backchannels using acoustic and linguistic features. We experimented with different neural network designs and feature combinations to find the best method. The use of recurrent neural networks (LSTMs) greatly increased the performance of our predictions. We showed our results are subjectively significantly better than random predictions.
+We have presented a novel approach to predict backchannels using acoustic and linguistic features. We experimented with different neural network designs and feature combinations to find the best method. The use of recurrent neural networks (LSTMs) greatly increased the performance of our system. We showed our results are subjectively significantly better than random predictions.
 
 There are some points where further improvements could be made.
-We only scraped the surface of adding linguistic features via word2vec because it assumes the availability of an instant speech recognizer. In our system we simply used the available hand-written transcripts, but in a real online environment this would need a more sophisticated approach. Further work is needed to evaluate other methods for adding word vectors to the input features and to analyse problems with our approach.
+We only scraped the surface of adding linguistic features via word2vec because it assumes the availability of an instant speech recognizer. In our system we simply used the available hand-written transcripts, but in a real online environment this would need a more sophisticated approach. Further work is needed to evaluate other methods for adding word vectors to the input features and to analyse possible improvements.
 
 We only tested dense feed forward neural networks and LSTMs, other architectures like time-delay neural networks [@waibel_phoneme_1989] or their generalized counterpart (convolutional neural networks) may also give interesting results. In addition, the training method we use makes the neural network unaware of the postprocessing. This means the network cannot know when it is actually producing a trigger, which means it can't know exactly when the last backchannel was. Because backchannels are unlikely to happen too close to each other, adding the time since the last trigger as a feature to the inputs may improve the results. This means we would need to decide on the exact postprocessing parameters before training, which would be incompatible with our current approach of optimizing those paramters with bayesian optimization depending on the specific outputs of the network.
 
