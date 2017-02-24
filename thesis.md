@@ -537,10 +537,10 @@ An interesting aspect is that in our tests the predictors had difficulty disting
 
 ## Subjective Results
 
-A total of 19 participants participated in the survey, mostly from the university group _Machine Learning Karlsruhe_. Because every participant rated two samples for every evaluation method, this gives us a sample size of $N=38$. The detailed results of the survey can be seen in @tbl:surveyresults.
+A total of 20 participants participated in the survey, mostly from the university group _Machine Learning Karlsruhe_. Because every participant rated two samples for every evaluation method, this gives us a sample size of $N=40$. The detailed results of the survey can be seen in @tbl:surveyresults.
 The results show that our neural network performs significantly better regarding timing than a random predictor ($p=0.005\%$), but significantly worse than human performance ($p=0.4\%$). For _naturalness_, our predictor is not significantly better than random performance ($p=7.7\%$), as shown in @tbl:surveysig.
 
-Participants could leave comments on the survey. One person was confused because they could still hear the leaking original listener audio track beneath the artificial one, even though we chose the segments from audio track where this problem should be minimal. Another person commented "Telephone conversations are not in the best sound quality. For me it's hard to follow and it's not easy to rate these conversations."
+Participants could leave comments on the survey. One person was confused because they could still hear the leaking original listener audio track beneath the artificial one, even though we explicitly chosesegments where this problem should be minimal. Another person commented "Telephone conversations are not in the best sound quality. For me it's hard to follow and it's not easy to rate these conversations."
 
 \begin{table}
     \centering
@@ -553,6 +553,8 @@ Participants could leave comments on the survey. One person was confused because
     \input{tbl/surveySignificance.tex}
     \caption{Comparing performance of the predictors using Welch's t-test on the survey results, showing the differences in the mean of the rating between prediction methods are all significant regarding timing.\label{tbl:surveysig}}
 \end{table}
+
+\clearpage
 
 ## Objective Results
 
