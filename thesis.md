@@ -12,7 +12,10 @@ figPrefix: [Figure, Figures]
 tblPrefix: [Table, Tables]
 secPrefix: [Section, Sections]
 abstract:
-    Backchannels are a method for the listener of a conversation to give feedback without taking the turn. This thesis describes the process of the creation of a prediction system for backchannel responses. We trained neural networks to detect segments of speech that are cues for backchannels using acoustic and linguistic input features, and to emit a trigger signal whenever appropriate. We compared the performance of various feature combinations and found the optimal layer configurations and context lengths. We evaluated the performance of our system objectively using the F1-Score and subjectively in a survey, showing it performs significantly better than a random baseline.
+    Backchannels such as _yeah_, _right_ or _uh-huh_ are a method for the listener of a conversation to give feedback to the speaker without taking the turn. This thesis describes the process of the creation of a prediction system for backchannel responses. We train neural networks to detect segments of speech that are cues for backchannels using acoustic and linguistic input features, and to emit a trigger signal whenever appropriate. We compare the performance of various feature combinations and search for the optimal layer configurations and context lengths. We evaluate the performance of our system objectively using the F1-Score and subjectively in a survey, showing it performs significantly better than a random baseline.
+
+abstractGerman:
+    Sogenannte _Backchannels_ wie _mhm_, _aha_ und _okay_ geben einem Zuhörer die Möglichkeit dem Sprecher ohne Sprecherwechsel Feedback zu geben. Diese Arbeit beschreibt den Prozess einen Prediktor für Backchannels zu entwerfen. Wir trainieren neuronale Netze mithilfe von akustischen und linguistischen Merkmalen um die Segmente der Sprache zu erkennen, die Auslöser für Backchannels sind, und um ein Trigger-Signal auszugeben wann immer es angebracht ist. Wir vergleichen die Leistung mit verschiedenen Input-Merkmal Kombinationen und suchen nach der optimalen Layer-Konfiguration und Kontext-Länge. Wir evaluieren die Leistung unsers Systems objektiv mit dem F1-Score und subjektiv in einer Studie, wobei wir zeigen dass die Ergebnisse signifikant besser sind als eine zufällige Baseline.
 ---
 
 
