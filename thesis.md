@@ -538,7 +538,7 @@ An interesting aspect is that in our tests the predictors had difficulty disting
 ## Subjective Results
 
 A total of 19 participants participated in the survey, mostly from the university group _Machine Learning Karlsruhe_. Because every participant rated two samples for every evaluation method, this gives us a sample size of $N=38$. The detailed results of the survey can be seen in @tbl:surveyresults.
-The results show that our neural network performs significantly better regarding timing than a random predictor ($p=0.02\%$), but significantly worse than human performance ($p=0.1\%$). For _naturalness_, our predictor is not significantly better than random performance ($p=13\%$), as shown in @tbl:surveysig.
+The results show that our neural network performs significantly better regarding timing than a random predictor ($p=0.005\%$), but significantly worse than human performance ($p=0.4\%$). For _naturalness_, our predictor is not significantly better than random performance ($p=7.7\%$), as shown in @tbl:surveysig.
 
 \begin{table}
     \centering
@@ -549,7 +549,7 @@ The results show that our neural network performs significantly better regarding
 \begin{table}
     \centering
     \input{tbl/surveySignificance.tex}
-    \caption{Comparing performance of the predictors using Welch's t-test on the survey results, showing the differences in the mean of the rating between prediction methods are all highly significant regarding timing.\label{tbl:surveysig}}
+    \caption{Comparing performance of the predictors using Welch's t-test on the survey results, showing the differences in the mean of the rating between prediction methods are all significant regarding timing.\label{tbl:surveysig}}
 \end{table}
 
 ## Objective Results
@@ -801,6 +801,11 @@ This program is completely client-side and runs in the webbrowser, loading all n
 ![Precision, Recall and F1-Score depending on the margin of error center, showing a very clear normal distribution. The center of this distribution depends on the filter sigma and cutoff, meaning we can optimize it depending on the evaluation method.](img/20170212134705.png){#fig:varycenter}
 
 ![Precision, Recall and F1-Score depending on the minimum monologuing segment length. -1 has the symbolic meaning that we evaluate on all data, including silence.](img/20170212132651.png){#fig:varymonologuing}
+
+
+## Survey software
+
+TODO
 
 # Conclusion and Future Work {#sec:conclusion}
 
