@@ -300,7 +300,7 @@ We chose the backchannel audio samples randomly from all neutral backchannels wi
 This gave us a total of $6\cdot3=18$ audio files. For every participant we randomly selected six audio files so that everyone heard every speaker track exactly once and two samples of every method (Truth, Random, NN). The order was shuffled to remove any structural effects.
 Then we asked the participants to rate the audio samples by how natural it sounded in general and how appropriate they thought the backchannel timing was. A screenshot of the survey interface can be seen in @fig:bcsurvey.
 
-![Screenshot of the survey interface.](img/survey.png){#fig:bcsurvey}
+![Screenshot of the survey interface.](img/survey-bw.png){#fig:bcsurvey}
 
 
 <!--First, we evaluated human performance with the same evaluation method we used for our predictors.
@@ -462,7 +462,7 @@ We compared online prediction and offline "prediction", where offline prediction
 
 The first LSTM we tested by simply replacing the feed forward layers with LSTM layers immediately improved the results by 16% without any further adjustments. We kept the default configuration of using "Peepholes" [@gers_learning_2003] and used only forward facing layers (connections from past to future). But this showed the issues with a fixed learning rate, as the loss regularily exploded after every 10 to 15 epochs, as can be seen in @fig:exploding. When adding FFV, increasing the input dimension per time frame from 2 to 9, SGD stopped working at all (everything became NaN) without manually tuning the learning rate. One solution to this would be to use a scheduler. A scheduler automatically adjusts the learning rate depending on some condition. An example is simple exponential decay, which exponentially decreases the initial learning rate with a fixed factor. Another method is newbob scheduling, which exponentially decreases the learning rate when the validation error stops decreasing or only decreases very little. These schedulers need parameter tuning, making them hard to use without a lot of experimenting.
 
-![Anomalies while training an LSTM network with a fixed learning rate. Shown is the training loss over epochs.](img/20170208233441.png){#fig:exploding}
+![Anomalies while training an LSTM network with a fixed learning rate. Shown is the training loss over epochs.](img/20170208233441-bw.png){#fig:exploding}
 
 We solved the problem of automatically adjusting the learning rate by using Adam [@kingma_adam:_2014] instead of SGD, which is a gradient descent method related to Adadelta and Adagrad which also incorporates momentum in some way and intelligently adjusts the learning rate. I have no idea how this works, but Adam with a fixed learning rate of 0.001 worked great for us, so we did all further testing using Adam.
 
@@ -517,15 +517,15 @@ We manually separated the data into the categories neutral, question, surprise/n
     \caption{Number of instances in the training data set per category}\label{tbl:catcounts}
 \end{figure}
 
-To decide whether to trigger we first check if $(1-\textit{output}_{\text{NBC}}(t))$ is larger than a threshold, where NBC is the output for the category indicating no backchannel should happen. Then we use argmax(output(t)) to decide which backchannel category was predicted.
+To decide whether to trigger we first check if $(1-\text{output}_{\text{NBC}}(t))$ is larger than a threshold, where NBC is the output for the category indicating no backchannel should happen. Then we use argmax(output(t)) to decide which backchannel category was predicted.
 
-With this method, the number of training samples for the categories vary, and the NBC category has as many samples as the other categories together. To balance this data, we can weigh the gradient update for each training sample by $w(\textit{sample}) = \max(\textit{counts}) / \textit{counts}(\textit{category}(\textit{sample}))$, where $\textit{counts}(\textit{category})$ is the total number of training samples for a specific category. This means that the training samples with categories that have few samples are more important for training than the more common categories. Alternatively, we can simply duplicate samples from the minority categories until the categories are balanced. Both methods produced similar results.
+With this method, the number of training samples for the categories vary, and the NBC category has as many samples as the other categories together. To balance this data, we can weigh the gradient update for each training sample by $$w(\text{sample}) = \frac{\max(\text{counts})}{\text{counts}(\text{category}(\text{sample}))},$$ where $\text{counts}(\text{category})$ is the total number of training samples for a specific category. This means that the training samples with categories that have few samples are more important for training than the more common categories. Alternatively, we can simply duplicate samples from the minority categories until the categories are balanced. Both methods produced similar results.
 
 For training, the simplest method is to just train the whole network on the ground truth for the categories. But because the data is limited, this might not give the best results. Another method is to first train the network on just NBC and BC detecting, then fixing all the layers except the output layer and just fine-tuning the output layer to output multiple categories.
 
 The results for a network trained on a binary output with the last layer finetuned on multicategorical output can be seen in @fig:grayscale.
 
-![The output of a neural network trying to predict backchannel categories for a audio segment. The first category is "No Backchannel", so it is roughly inverse to the other categories (neutral, question, surprised, positive, affirmative). From top to bottom: Audio, Text, Raw NN output, Smoothed NN output. Black means higher probabilities, white means lower probabilities.](img/20170211151523.png){#fig:grayscale}
+![The output of a neural network trying to predict backchannel categories for a audio segment. The first category is "No Backchannel", so it is roughly inverse to the other categories (neutral, question, surprised, positive, affirmative). From top to bottom: Audio, Text, Raw NN output, Smoothed NN output. Black means higher probabilities, white means lower probabilities.](img/20170211151523-bw.png){#fig:grayscale}
 
 \clearpage
 
@@ -569,7 +569,7 @@ Participants could leave comments on the survey. One person was confused because
 
 ## Objective Results
 
-### Binary Output
+### Binary Output {#sec:binout}
 
 We use "$70 : 35$" to denote a network layer configuration of "$\text{input} \rightarrow 70\text{ neurons} \rightarrow 35\text{ neurons} \rightarrow \text{output}$".
 All of the results in [@tbl:varycontext; @tbl:varystrides; @tbl:varyfeatures; @tbl:varylstm; @tbl:varylayers] use the following setup unless otherwise stated:
@@ -627,7 +627,7 @@ positive                         & 113        & 43           & 25          & 78 
 
 # Implementation {#sec:implementation}
 
-We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results. This software was also used to create most of the figures in this document. All of the code will be available at <https://github.com/phiresky/backchannel-prediction>.
+We implemented multiple software components to help us understand the data, extract the relevant parts, train the predictors and evaluate the results. This software was also used to create most of the figures in this document. All of the code will be available at <https://github.com/phiresky/backchannel-prediction>. The repository also contains a script to reproduce all of the results in @sec:binout.
 
 
 
@@ -643,16 +643,16 @@ The user can choose a specific or random conversation from the training, validat
 
 \begin{wrapfigure}{R}{0.3\textwidth}
 \centering
-\includegraphics{img/20170211154422.png}
+\includegraphics{img/20170211154422-bw.png}
 \caption{Selecting a feature to display in the Web Visualizer.\label{fig:categories}}
-\vspace{-2cm}
+\vspace{-1cm}
 \end{wrapfigure}
 
 The user can also save the exact current GUI state including zoom and playback position to generate a unique URL that will restore the visualizer to that state when loaded. This is useful for sharing and saving interesting sections.
 
 Some state presets are also available, such as the default view which will show both channels of a conversation, together with the transcriptions, power, pitch and highlights for the training areas. Another meta preset is the NN output view, which includes a single audio channel and the raw output, smoothed output and resulting audio track for a trained network, as seen for example in @fig:postproc. The exact configuration can be chosen in a form (@fig:loadingnn). Newly trained networks will automatically be available when the training is finished, allowing quick subjective evaluation of the results.
 
-![Loading the output of the best epoch of specific network for channel A of the current conversation](img/20170211161913.png){#fig:loadingnn width=70%}
+![Loading the output of the best epoch of specific network for channel A of the current conversation](img/20170211161913-bw.png){#fig:loadingnn width=70%}
 
 
 ### Implementation Details
@@ -694,6 +694,12 @@ This way, we do not need to explicitly seperate the extraction from training and
 
 We also used joblib, a python library for easy parallelization, to enable the extraction and evaluation processes to use all available CPU cores.
 
+## Survey software
+
+The survey software is written in Typescript with SQLite, TypeORM, Express.js, MobX and React. It loads a set of audio files as output by the software described in @sec:evalsoftware. It creates a remapping from an incrementing counter to each of these files, so survey participants cannot be biased by knowing what they are listening to. It stores the ratings for each participants together with their comment into an SQLite database. It also has an admin interface which shows an automatically updating interactive pivot table of the current survey results, showing the average ratings depending on choosable dimensions (e.g. average ratings for each predictor for each audio sample). It can then also export this table to \LaTeX{} format, as seen in @tbl:surveyresults.
+
+A second component, written in python does the significance test by loading the results from the SQLite database and outputting a \LaTeX{} table for the significance of the difference between each rating type and predictor combination, as shown in @tbl:surveysig.
+
 ## Evaluation Visualizer
 
 The evaluation visualizer reads all the output JSON files from training and displays the resulting loss graphs as seen in @fig:l2reg. It also shows a table of the evaluation results with various parameters for a every neural network sorted from best validation result to worst (@fig:fullsingle). There is also a graph for detailed comparison of the postprocessing and evaluation methods, by fixing every parameter except one of them and plotting Precision, Recall, F1-Score with that parameter on the x-axis, as shown in @fig:varysigma, @fig:varycenter, and @fig:varymonologuing.
@@ -703,9 +709,7 @@ The UI can show multiple graphs at the same time, and also shows an overview ove
 This program is completely client-side and runs in the webbrowser, loading all needed data from the JSON files at runtime.
 
 
-![Overview table of all found network evaluation results, sorted by validation F1-Score.](img/20170220232312.png){#fig:evaloverview}
-
-![Full overview over a single training result, showing the loss graph for checking for overfitting issues and the evaluation results.](img/20170212134323.png){#fig:fullsingle}
+![Overview table of all found network evaluation results, sorted by validation F1-Score.](img/20170220232312-bw.png){#fig:evaloverview}
 
 ![Precision, Recall and F1-Score depending on the smoothing sigma used. The F1-Score peaks at $\sigma=\SI{350}{ms}$, Precision peaks at $\sigma=\SI{525}{ms}$. With lower sigmas, the predictor triggers more often causing the recall to approach 1.](img/20170212003936.png){#fig:varysigma}
 
@@ -713,13 +717,8 @@ This program is completely client-side and runs in the webbrowser, loading all n
 
 ![Precision, Recall and F1-Score depending on the minimum monologuing segment length. -1 has the symbolic meaning that we evaluate on all data, including silence.](img/20170212132651.png){#fig:varymonologuing}
 
+![Full overview over a single training result, showing the loss graph for checking for overfitting issues and the evaluation results.](img/20170212134323.png){#fig:fullsingle}
 
-## Survey software
-
-
-The survey software is written in Typescript with SQLite, TypeORM, Express.js, MobX and React. It loads a set of audio files as output by the software described in @sec:evalsoftware. It creates a remapping from an incrementing counter to each of these files, so survey participants cannot be biased by knowing what they are listening to. It stores the ratings for each participants together with their comment into an SQLite database. It also has an admin interface which shows an automatically updating interactive pivot table of the current survey results, showing the average ratings depending on choosable dimensions (e.g. average ratings for each predictor for each audio sample). It can then also export this table to \LaTeX{} format, as seen in @tbl:surveyresults.
-
-A second component, written in python does the significance test by loading the results from the SQLite database and outputting a \LaTeX{} table for the significance of the difference between each rating type and predictor combination, as shown in @tbl:surveysig.
 
 # Conclusion and Future Work {#sec:conclusion}
 

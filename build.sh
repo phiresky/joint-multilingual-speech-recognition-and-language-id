@@ -11,6 +11,7 @@ pandoc \
 	--standalone \
 	--template template/diplarb.tex \
 	--top-level-division=chapter \
+	--highlight-style monochrome \
 	-o build/thesis.tex
 
 (
