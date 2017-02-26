@@ -322,7 +322,7 @@ The word alignments have the same format, except they are split into single word
 
 To better understand and visualize the dataset, we first wrote a complete visualization GUI for viewing and listening to audio data, together with transcriptions, markers and other data. This proved to be very helpful. A screenshot of the UI inspecting a short portion of one of the phone conversations can be seen in @fig:amazing.
 
-![From top to bottom: Speaker A audio data, transcription, word alignment; then the same for Speaker B.](img/20170208185355.png){#fig:amazing}
+![From top to bottom: Speaker A audio data, transcription, word alignment; then the same for Speaker B.](img/20170208185355-bw.png){#fig:amazing}
 
 ## Extraction {#extraction-1}
 
@@ -414,7 +414,7 @@ We used the Janus Recognition Toolkit [@levin_janus-iii_2000] for the acoustic f
 These features are extracted for \SI{32}{ms} frame windows, with a frame shift of \SI{10}{ms}. This gives us 100 frames per feature per second.
 A sample of the pitch and power features can be seen in @fig:pitchpow.
 
-![From top to bottom: Audio samples, transcription, pitch and power for a single audio channel. Note that the pitch value is only meaningful when the person is speaking.](img/20170208184917.png){#fig:pitchpow}
+![From top to bottom: Audio samples, transcription, pitch and power for a single audio channel. Note that the pitch value is only meaningful when the person is speaking.](img/20170208184917-bw.png){#fig:pitchpow}
 
 
 #### Linguistic Features
@@ -424,7 +424,7 @@ Word2Vec is an "Efficient Estimation of Word Representations in Vector Space". A
 
 We extracted these features parallel to those output by Janus, with a 10 millisecond frame shift. To ensure we don't use any future information, we extract the word vector for the last word that ended _before_ the current frame timestamp. This way the predictor is in theory still online, though this assumes the availability of a speech recognizer with instant output. An example of this can be seen in @fig:w2v.
 
-![five-dimensional Word2Vec feature for some text. The encoding is offset by one word, for example the encoding for "twenty" is seen below the word "four", because we encode the word that _ended_ before the current time. Note that with this method we indirectly encode the length of the words and the time since the last word change.](img/20170216222513.png){#fig:w2v}
+![five-dimensional Word2Vec feature for some text. The encoding is offset by one word, for example the encoding for "twenty" is seen below the word "four", because we encode the word that _ended_ before the current time. Note that with this method we indirectly encode the length of the words and the time since the last word change.](img/20170216222513-bw.png){#fig:w2v}
 
 #### Context and Stride
 
