@@ -180,7 +180,9 @@ We could for example extract the center $t$ of the last speaker utterance before
 
 
 In addition to selecting the _positive prediction area_ as defined above, we also need to choose areas to predict zero i.e. “no backchannel” (NBC). The number of training samples of this kind should be about the same amount as backchannel samples so the network is not biased towards one or the other.
-To create this balanced data set, we can choose the range a few seconds before each backchannel as a negative sample. This gives us an exactly balanced data set, and the negative samples are intuitively meaningful, because in that area the listener explicitly decided not to give a backchannel response yet, so it is sensible to assume whatever the speaker is saying is not a trigger for backchannels.
+To create this balanced data set, we can choose the range a few seconds before each backchannel as a negative sample. This gives us an exactly balanced data set, and the negative samples are intuitively meaningful, because in that area the listener explicitly decided not to give a backchannel response yet, so it is sensible to assume whatever the speaker is saying is not a trigger for backchannels. An example of these training areas with a context of \SI{1500}{ms} is shown in @fig:bcnbcareas.
+
+![An example for binary BC and NBC training areas. The BC training area ends right before the backchannel utterance. From top to bottom: Speaker audio, speaker words, listener words.](img/20170226183503.png){#fig:bcnbcareas}
 
 ### Gaussian Training Area
 
