@@ -99,7 +99,7 @@
 
 \begin{table}
     \centering
-    \begin{tabular}{p{3.4cm}p{5.5cm}ccc}
+    \begin{tabular}{p{3.1cm}p{6cm}ccc}
     \hline\noalign{\smallskip}
         Margin of Error & Constraint & Precision & Recall & F1-Score \\
         \noalign{\smallskip}\svhline\noalign{\smallskip}
@@ -107,11 +107,11 @@
         \SIrange{-100}{500}{ms} &&	0.239 & 0.406 & 0.301 \\
         \SIrange{-500}{500}{ms} && 0.247 & 0.536 & 0.339 \\
     \hline\noalign{\smallskip}
-        \SIrange{0}{1000}{ms} & Baseline \newline (random, correct BC count) & 0.111 & 0.052 & 0.071 \\
-         & Baseline \newline (random, 8x correct BC count) & 0.079 & 0.323 & 0.127 \\
+        \SIrange{0}{1000}{ms} & Baseline (random, correct BC count) & 0.111 & 0.052 & 0.071 \\
+         & Baseline (random, 8x correct BC count) & 0.079 & 0.323 & 0.127 \\
          & Balanced Precision and Recall & 0.342 & 0.339 & 0.341 \\
          & Best F1-Score \newline (only acoustic features) & 0.294 & 0.488 & 0.367 \\
-         & Best F1-Score (acoustic and linguistic features) & 0.312 & 0.511 & \bf{0.388} \\
+         & Best F1-Score \newline (acoustic and linguistic features) & 0.312 & 0.511 & \bf{0.388} \\
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
     \caption{Results with our evaluation method with various margins of error used in other research \cite{de_kok_survey_2012}. Performance improves with a wider margin width and with a later margin center.\label{tbl:ourbest}}
