@@ -14,8 +14,6 @@ header-includes:
 - \usepackage{siunitx}
 ---
 
-# Introduction
-
 ## Definition
 
 What are backchannels?
@@ -23,7 +21,7 @@ What are backchannels?
 - Nodding / head movement
 - Eye gaze shift
 - Short phrases like "uh-huh", "yeah", "right"
-- Vary from culture to culture (e.g. Japanese)
+- Different from culture to culture (e.g. Japanese)
 
 ## Motivation / Goal
 
@@ -60,12 +58,12 @@ Common approach: manually tuned rules.
 
 Ward (2000):
 
-> produce backchannel feedback upon detection of:
+> produce backchannel feedback after 700ms of detection of:
 >
 > - a region of pitch less than the 26th-percentile pitch level and
 > - continuing for at least 110 milliseconds,
 > - coming after at least 700 milliseconds of speech,
-> - providing you have not output back-channel feedback within the preceding 800 milliseconds,
+> - providing you have not output back-channel feedback within the preceding 800 milliseconds
 
 Almost always based on pitch and power
 
@@ -79,10 +77,10 @@ Common approach: manually tuned rules.
 
 semi-automatic approaches, e.g. Morency (2010)
 
-- hand-picked features such as binary pause regions and different speech slopes
-- train Hidden Markov Models to predict BCs from that
+<!--- hand-picked features such as binary pause regions and different speech slopes
+- train Hidden Markov Models to predict BCs from that-->
 
-# NN-based approach
+# Preprocessing
 
 ## Dataset
 
@@ -96,34 +94,10 @@ Switchboard dataset:
 ## BC Utterance Selection
 
 - Get a list of all backchannel phrases
-- Separate those into categories
+<!--- Separate those into categories-->
 - BC phrase list from the _Switchboard Dialog Act Corpus_ (SwDA)
 
-\begin{figure}
-\centering
-\scriptsize
-\begin{tabular}{cp{3cm}cp{4cm}r}
-    \hline\noalign{\smallskip}
-
-    ~ & name & act\_tag & example & full\_count \\
-
-    \noalign{\smallskip}\svhline\noalign{\smallskip}
-
-    1 & Statement-non-opinion & sd & Me, I'm in the legal department. &  75145\tabularnewline
-    2 & \bf{Acknowledge (Backchannel)} & b & Uh-huh. &  38298\tabularnewline
-    3 & Statement-opinion & sv & I think it's great &  26428\tabularnewline
-    4 & Agree/Accept & aa & That's exactly it. &  11133\tabularnewline
-    5 & Abandoned or Turn-Exit & \% & So, - &  15550\tabularnewline
-    6 & Appreciation & ba & I can imagine. &  4765\tabularnewline
-    7 & Yes-No-Question & qy & Do you have to have any special training? &  4727\tabularnewline
-
-    \noalign{\smallskip}\hline\noalign{\smallskip}
-\end{tabular}
-\caption{SwDA categories}
-\label{tbl:swda}
-\end{figure}
-
-## BC Utterance Selection (Practice)
+. . .
 
 SwDA incomplete
 
@@ -147,18 +121,17 @@ Something like "uh" can be a disfluency or a BC.
 ## Training Area Selection
 
 ![Positive Training Area (width=1.5s)](img/tminus-b.svg)
-
+<!--
 ## Training Area Selection
 
 Need area to predict non-BC.
 
 → Area of audio where no BC follows
 
-. . .
-
 Want balanced data set.
 
 → Choose area 0.5 seconds before BC area
+-->
 
 ## Training Area Selection
 
@@ -167,7 +140,7 @@ Want balanced data set.
 
 → Balanced data
 
-## Feature Selection (Theory)
+## Feature Selection
 
 - Acoustic features like power, pitch
 
@@ -189,9 +162,9 @@ Want balanced data set.
 
 ![](img/nn-a.svg)
 
-## Input layer
+<!--## Input layer
 
-![](img/nn-b.svg)
+![](img/nn-b.svg)-->
 
 ## Input layer
 
@@ -201,28 +174,28 @@ Want balanced data set.
 
 ![](img/nn-d.svg)
 
-## Hidden layers (Feed forward)
+<!--## Hidden layers (Feed forward)
 
 ![](img/nn-hidden2.svg)
 
-<!--## Hidden layers (Feed forward)
+## Hidden layers (Feed forward)
 
-![](img/nn-hidden3.svg) -->
+![](img/nn-hidden3.svg)
 
 ## Hidden layers (Feed forward)
 
-![](img/nn-hidden4.svg)
+![](img/nn-hidden4.svg) -->
 
 ## Hidden layers (Feed forward)
 
 
 ![](img/nn-hidden-a.svg)
 
-## Problem with feed forward networks
-
-Feed Forward can not take its previous state into account.
+## Recurrent NNs
 
 BCs are more probable after a longer period without BCs.
+
+→ Use RNN / LSTM
 
 . . .
 
@@ -319,22 +292,6 @@ automatically with Bayesian optimization:
     \noalign{\smallskip}\hline\noalign{\smallskip}
     \end{tabular}
     \caption{Results with various context lengths. Performance peaks at 1500\,ms.}\label{tbl:varycontext}
-\end{table}
-
-## Context stride
-
-\begin{table}
-    \centering
-    \begin{tabular}{cccc}
-    \hline\noalign{\smallskip}
-    Stride & Precision & Recall & F1-Score \\
-    \noalign{\smallskip}\svhline\noalign{\smallskip}
-    1 & 0.290 & 0.490 & 0.364 \\
-    2 & 0.305 & 0.488 & \bf{0.375} \\
-    4 & 0.285 & 0.498 & 0.363 \\
-    \noalign{\smallskip}\hline\noalign{\smallskip}
-    \end{tabular}
-    \caption{Results with various context frame strides.}\label{tbl:varystrides}
 \end{table}
 
 ## LSTM vs FF
@@ -479,13 +436,47 @@ truth & average & 4.20 points & 4.08 points & 40 \\
 # Conclusion and Future Work-->
 
 
+# Addendum
+
+## SwDA categories
+
+\begin{figure}
+\centering
+\scriptsize
+\begin{tabular}{cp{3cm}cp{4cm}r}
+    \hline\noalign{\smallskip}
+
+    ~ & name & act\_tag & example & full\_count \\
+
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+
+    1 & Statement-non-opinion & sd & Me, I'm in the legal department. &  75145\tabularnewline
+    2 & \bf{Acknowledge (Backchannel)} & b & Uh-huh. &  38298\tabularnewline
+    3 & Statement-opinion & sv & I think it's great &  26428\tabularnewline
+    4 & Agree/Accept & aa & That's exactly it. &  11133\tabularnewline
+    5 & Abandoned or Turn-Exit & \% & So, - &  15550\tabularnewline
+    6 & Appreciation & ba & I can imagine. &  4765\tabularnewline
+    7 & Yes-No-Question & qy & Do you have to have any special training? &  4727\tabularnewline
+
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+\end{tabular}
+\caption{SwDA categories}
+\label{tbl:swda}
+\end{figure}
 
 
+## Context stride
 
-
-
-
-
-
-
-
+\begin{table}
+    \centering
+    \begin{tabular}{cccc}
+    \hline\noalign{\smallskip}
+    Stride & Precision & Recall & F1-Score \\
+    \noalign{\smallskip}\svhline\noalign{\smallskip}
+    10ms & 0.290 & 0.490 & 0.364 \\
+    20ms & 0.305 & 0.488 & \bf{0.375} \\
+    40ms & 0.285 & 0.498 & 0.363 \\
+    \noalign{\smallskip}\hline\noalign{\smallskip}
+    \end{tabular}
+    \caption{Results with various context frame strides.}\label{tbl:varystrides}
+\end{table}
