@@ -12,6 +12,7 @@ header-includes:
     \hfill\usebeamertemplate***{navigation symbols}
     \hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
 - \usepackage{siunitx}
+classoption: aspectratio=169
 ---
 
 ## Definition
@@ -121,6 +122,7 @@ Something like "uh" can be a disfluency or a BC.
 ## Training Area Selection
 
 ![Positive Training Area (width=1.5s)](img/tminus-b.svg)
+
 <!--
 ## Training Area Selection
 
@@ -223,14 +225,14 @@ Gauss filter looks into future
 → Cut off filter and shift it
 
 
-![](img/gauss-cutoff.svg)
+![](img/gauss-cutoff.svg){width=65%}
 
 ## Thresholding / Triggering
 
-- Use areas of output > threshold (0 < t < 1)
+- Use areas of output > threshold t (0 < t < 1)
 - Trigger at local maximum
 
-![Example of the postprocessing process.](../img/postprocessing.pdf){#fig:postproc}
+![Example of the postprocessing process.](../img/postprocessing.pdf){#fig:postproc width=70%}
 
 # Evaluation
 
@@ -241,7 +243,7 @@ Gauss filter looks into future
 - Recall (portion of correct BCs that were predicted)
 - F1-Score (harmonic mean of Precision and Recall)
 
-![Evaluating the performance of a network while varying the threshold. Note the inverse relationship between _Precision_ and _Recall_.](../img/20170220200731.png){#fig:varythreshold}
+![Evaluating the performance of a network while varying the threshold. Note the inverse relationship between _Precision_ and _Recall_.](../img/20170220200731.png){#fig:varythreshold width=70%}
 
 
 ## Lots of parameters to tune
@@ -435,8 +437,13 @@ truth & average & 4.20 points & 4.08 points & 40 \\
 
 # Conclusion and Future Work-->
 
+# Thank you for your attention
 
 # Addendum
+
+## Demo
+
+<http://localhost:3000/#N4IgDgNghgngRlAxgawAoHsDOBLALt9AOxAC5CBXCCAGhADN0r0B3VaeJZUuqCTAU1qIiAN34AnTFHxFSITMwAsAJgAMykLXLZMpANqg6-aeXH9dJA-WO5T-OQHoAgg-4APXOKS5+AEwdQvoiaICI65LzYAF4ScgDqUGIM4gC2IcKEdNgA5nKE6KmRMQAy6Ii86aZmhLgASlCE2fYkoCnYxCQAtKoAdACMAOx9AGwAnH0AHKOKAKwAzH3KM7QpUG6kvX2KqjPDc6PDihOKcwMzAL5a2r6kW+cAurQAFvw5T7hyUOS46CHk17c5pdDDY7BYrEYTGZHC5PA1MIhxNgwLgHD4PCEwpgIhBorESCAACruD5CIhZXIE-KFXElMoVIRVfg1eqNZoUKhXbA3EgjB7PV7Zd6fb6-Lk8voXaigf7c24DWiQ2xmcEgqHNEDONFeQgIpEohzMAq+XTi24TWhYnF48RyYkYsmZHJ5AqrWn8UrlCCVcTVOoNJqkDkQfkgF5vD4Er4-EDA6zq1Xx5UarUAOVTAAJ0N8wN9MA4RDtVJ0shRCNgsn5OiNOtk+nB+ItFHBOr5sOJcDASHxcClOg3MLgS6CVZ0wCwJNQwHhEE9qHQ6CJqEbxL5lGJEAB9NspObFzAQFgIXCzhwD0mhcJFfEgBJJV3pcnOqmu6+ehkgRBMlkB5qtdobD06iHMoiiKMMZx7MMyjjMsICrOsJC9KMMyjBMfSjKchzDBMwwzMclwgLKPJqKG4ZCpGMzKGavKjHGSpgvoarJjCDjplmOZ5gWRYlu05DlpWvjVsMtb1o2oEtm2HZdj2fbnsOCZjhO4hTjOc4LkuK5rhu27YLu+6Hswx6nuePSYCk6DoLgTyYle7q2gSd78MkaSOhSLo0ni77eoyvrMv6bKkP+HS9KoJx9Kocx7PMfSxcoEF9CsayAVMGHjAM0wRZhYFSkRAIkMoyj0SOKYuOx2a4LmuD5oWMzFqW-EVtgVY1nWDZNpJ7adt2g5yeYQ4MaO47MJO04nupi7Lsa678FuO57p0B5HtIJn9WZFlWU8PTWSqfz5cocyWnZNpyAAEm8uIUaan5PpSIDUm6Xn0j5n7fgFgZkJQIaPGGgrCiQExwcRpDKH0xUJkxSZ2Kx5WcdV3F1bxZZNS1IlteJzatl1Mm9f2-UKcmmBKSNKljbO86TVpM1zXpC1LUZK1PGea3mZZ1k9HAwRHdi14ObeiTOQ+bnPvdr7ut5Pp+qyH3BaQ3Q9DMsWKH0cwzAMKiTGcSWIb0UEDBlAyA5K0G5cDBUXD95H-RM1F5XKBWKKGUSWWkLQgBAzmRr0itqDbMGRWrhUjLQSIUYBww7DM4EjNlYGqJMhE-LgvCEnp-AAMqzUQJog6MowK4V5xAA>
 
 ## SwDA categories
 
