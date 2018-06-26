@@ -2,11 +2,7 @@
 title: Backchannel Prediction for Conversational Speech Using Recurrent Neural Networks
 header-includes:
 - |-
-   \makeatletter
-   \def\svhline{%
-   \noalign{\ifnum0=`}\fi\hrule \@height2\arrayrulewidth \futurelet
-   \reserved@a\@xhline}
-   \makeatother
+   \def\svhline{\hline}
    \setbeamertemplate{sidebar right}{}
     \setbeamertemplate{footline}{%
     \hfill\usebeamertemplate***{navigation symbols}
@@ -162,7 +158,7 @@ Want balanced data set.
 
 ## Input layer
 
-![](img/nn-a.svg)
+![Input layer](img/nn-a.svg)
 
 <!--## Input layer
 
@@ -170,11 +166,11 @@ Want balanced data set.
 
 ## Input layer
 
-![](img/nn-c.svg)
+![Input layer](img/nn-c.svg)
 
 ## Input layer
 
-![](img/nn-d.svg)
+![Input layer](img/nn-d.svg)
 
 <!--## Hidden layers (Feed forward)
 
@@ -191,7 +187,7 @@ Want balanced data set.
 ## Hidden layers (Feed forward)
 
 
-![](img/nn-hidden-a.svg)
+![Hidden layer](img/nn-hidden-a.svg)
 
 ## Recurrent NNs
 
@@ -413,7 +409,7 @@ Randomly show participants 6 samples of the following categories
 
 ## Survey
 
-![Screenshot of the survey interface.](../img/survey-bw.png){#fig:bcsurvey}
+![Screenshot of the survey interface.](../img/survey-bw.png){#fig:bcsurvey width=60%}
 
 ## Survey Results
 
