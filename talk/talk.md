@@ -40,29 +40,25 @@ Recognize multiple languages at the same time
 ## Model overview
 
 1. Input: for each audio frame one 2d input image, 3 channels (like RGB image processing)
-    - spectral features (what exactly?)
-    - delta spectral features
-    - deltadelta spectral features
+    - spectral features
 2. Encoder
-    #. VGGNet CNN
+    #. VGGNet Convolutional NN (first 6 layers)
     #. One bidirectional LSTM layer (320 cells x2)
-3. Decoder
-    - Decoder 1 (CTC)
-        - fully connected layer (converts 640 outputs from BLSTM -> N characters softmax)
-    - Decoder 2 (Attention + one directional LSTM)
-        - Attention for each input frame to each output character
-        - LSTM (300 cells), input: previous hidden state and output, attention-weighted input features
-        - fully connected layer (converts 300 outputs from LSTM -> N characters softmax)
+3. Decoder (Attention + one directional LSTM)
+    - Soft Attention for each input frame to each output character
+    - LSTM (300 cells), input: previous hidden state and output, attention-weighted input features
+    - fully connected layer (converts 300 outputs from LSTM -> N characters softmax)
 4. Output
     - N characters from union of all languages (softmax)
-5. Training objective function: 0.5 * CTC loss + 0.5 * Attention loss
-6. Inference via beam search on attention output weighted by loss function
 
-- AdaDelta optimization
 
 ## Input
 
-spectral features
+(Ab)use of image processing pipeline - input formatted like a RGB image
+
+first channel: spectral features
+second channel: delta spectral features
+third channel: deltadelta spectral features
 
 probably cepstral? fourier, fundamental frequency variation? etc
 
@@ -72,7 +68,7 @@ either just one feature map or they have some convolution issues
 
 ![VGG Net for image classification](img/vgg16.png)
 
-## Encoder - VGG Net Architecture
+## Encoder - VGG Net Architecture - First six layers
 
 ![VGG Net - first 6 layers](img/vgg16-cutoff.png)
 
@@ -80,15 +76,41 @@ either just one feature map or they have some convolution issues
 
 ## Encoder - Bidirectional LSTM layer
 
-320 cells *2 in both directions
+320 cells *2 = 640 outputs per time step
 
-(image)
+![Bidirectional LSTM](img/RNN-bidirectional.png)
 
+http://colah.github.io/posts/2015-09-NN-Types-FP/
+
+## Decoder (Attention-based)
+
+
+## 2. Decoder (CTC)
+
+1. Input (same as before)
+1. Encoder (same as before)
+2. Decoder (CTC)
+    fully connected layer per time stemp (converts 640 outputs from BLSTM -> N characters, softmax)
+3. One output character per input frame, normalized using CTC Loss
+
+* First, add blank character to set. e.g. Hello -> {H, E, L, O, -}
+* Inference: Remove duplicates: HHHH-EEEEEEEE-LL-LLL----OOOOOO → H-E-L-L-O → HELLO
+* Training: HELLO → H-E-L-L-O → all combinations of char duplications are ok
+
+https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-classification-3797e43a86c
 
 ## RNN-LM
 
 - Model distribution of characters in languages (ignores input speech)
 
+
+## Combine both decoders + RNN-LM
+
+- AdaDelta optimization
+
+- Training objective function: 0.5 * CTC loss + 0.5 * Attention loss + 0.1 RNN-LM loss
+
+- Inference via beam search on attention output weighted by objective function
 
 
 ## Conclusions
