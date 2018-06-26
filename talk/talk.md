@@ -1,5 +1,7 @@
 ---
-title: Backchannel Prediction for Conversational Speech Using Recurrent Neural Networks
+title: Language Independent End-to-End Architecture For Joint Language and Speech Recognition (2017)
+subtitle:
+    Watanabe, S.; Hori, T.; Hershey, J.R. 
 header-includes:
 - |-
    \def\svhline{\hline}
@@ -11,82 +13,109 @@ header-includes:
 classoption: aspectratio=169
 ---
 
-## Definition
-
-What are backchannels?
-
-- Nodding / head movement
-- Eye gaze shift
-- Short phrases like "uh-huh", "yeah", "right"
-- Different from culture to culture (e.g. Japanese)
-
 ## Motivation / Goal
 
-- BCs help build _rapport_ (comfortableness between conversation partners)
+Recognize multiple languages at the same time
 
-→ Improve conversation with artificial assistants
-
-<!--## BC categories
-
-- non-committal ("uh huh", "yeah")
-- positive / confirming ("oh how neat", "great")
-- negative / surprised ("you're kidding", "oh my god")
-- questioning ("oh are you", "is that right")
-- et cetera.
-
-## Why backchannel prediction?
-
-- Artificial assistants are becoming ubiquitous (Siri, Google Now, Alexa, Cortana, ...)
-- Conversation with these is still distinctively unhuman
-- BCs can help make conversations with an AI agent feel more natural
--->
-How?
-
-- Simplify backchannels to only short phrases
-- Predict when to emit backchannels
-- (Predict what kind of backchannel to emit)
-
+- Use a single model for 10 languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU)
+- Check if transfer learning between languages work
+- two tasks: identify language AND recognize speech (simultaneously)
 
 # Related Work
 
 ## Related Work
 
-Common approach: manually tuned rules.
+(e.g. only attention)
 
-Ward (2000):
+- Multilingual Speech Recognition With A Single End-To-End Model (Shubham Toshniwal)
+    - separate output for language id
+    - only on 9 indian languages
 
-> produce backchannel feedback after 700ms of detection of:
->
-> - a region of pitch less than the 26th-percentile pitch level and
-> - continuing for at least 110 milliseconds,
-> - coming after at least 700 milliseconds of speech,
-> - providing you have not output back-channel feedback within the preceding 800 milliseconds
+# Model overview
 
-Almost always based on pitch and power
+## Model overview
 
-## Related Work
+![Model overview (from the paper)](img/20180626154145.png)
 
-Common approach: manually tuned rules.
+## Model overview
 
-- error-prone
-- a lot of manual work
-- hard to generalize
+1. Input: for each audio frame one 2d input image, 3 channels (like RGB image processing)
+    - spectral features (what exactly?)
+    - delta spectral features
+    - deltadelta spectral features
+2. Encoder
+    #. VGGNet CNN
+    #. One bidirectional LSTM layer (320 cells x2)
+3. Decoder
+    - Decoder 1 (CTC)
+        - fully connected layer (converts 640 outputs from BLSTM -> N characters softmax)
+    - Decoder 2 (Attention + one directional LSTM)
+        - Attention for each input frame to each output character
+        - LSTM (300 cells), input: previous hidden state and output, attention-weighted input features
+        - fully connected layer (converts 300 outputs from LSTM -> N characters softmax)
+4. Output
+    - N characters from union of all languages (softmax)
+5. Training objective function: 0.5 * CTC loss + 0.5 * Attention loss
+6. Inference via beam search on attention output weighted by loss function
 
-semi-automatic approaches, e.g. Morency (2010)
+- AdaDelta optimization
 
-<!--- hand-picked features such as binary pause regions and different speech slopes
-- train Hidden Markov Models to predict BCs from that-->
+## Input
 
-# Preprocessing
+spectral features
 
-## Dataset
+probably cepstral? fourier, fundamental frequency variation? etc
 
-Switchboard dataset:
+either just one feature map or they have some convolution issues
 
-- 2400 English telephone conversations 
-- 260 hours total
-- Randomly selected topics
-- Transcriptions and word alignments that include BC utterances
+## Encoder - VGG Net Architecture
+
+![VGG Net for image classification](img/vgg16.png)
+
+## Encoder - VGG Net Architecture
+
+![VGG Net - first 6 layers](img/vgg16-cutoff.png)
+
+(actual input dimensions are not mentioned)
+
+## Encoder - Bidirectional LSTM layer
+
+320 cells *2 in both directions
+
+(image)
+
+
+## RNN-LM
+
+- Model distribution of characters in languages (ignores input speech)
+
+
+
+## Conclusions
+
+- adding a pure language model (RNN-LM) improves performance a bit
+
+## Potential problems / future work?
+
+- uniform random parameter initialization with [-0.1, 0.1] sounds bad
+- does not work in realtime (without complete input utterance)
+    - Bidirectional LSTM in encoder
+        - Could try one directional, but Language ID would completely break
+    - CTC in realtime?
+    - Attention does not work in realtime
+- same latin characters are used for multiple languages, while others (RU, CN, JP) get their own character set
+
+
+
+
+
+
+
+
+
+
+
+
  
 ## BC Utterance Selection
 
@@ -107,17 +136,6 @@ Something like "uh" can be a disfluency or a BC.
 → only include phrases with silence or BC before them.
 
 
-## Training Area Selection
-
-![Sample Audio Segment](img/tminus0.svg)
-
-## Training Area Selection
-
-![Sample Audio Segment](img/tminus.svg)
-
-## Training Area Selection
-
-![Positive Training Area (width=1.5s)](img/tminus-b.svg)
 
 <!--
 ## Training Area Selection
@@ -131,9 +149,6 @@ Want balanced data set.
 → Choose area 0.5 seconds before BC area
 -->
 
-## Training Area Selection
-
-![Pos/Neg Training areas](img/tminus-c.svg)
 
 
 → Balanced data
@@ -144,50 +159,11 @@ Want balanced data set.
 
 - Linguistic features (from the transcriptions)
 
-## Feature Selection -- Acoustic
-
-![Audio, Power, Pitch](img/20170311192331.png)
-
-## Feature Selection -- Linguistic
-
-![Word2Vec](img/20170311192910.png)
 
 <!-- "what i" has same encoding -->
 
 # Neural network design
 
-## Input layer
-
-![Input layer](img/nn-a.svg)
-
-<!--## Input layer
-
-![](img/nn-b.svg)-->
-
-## Input layer
-
-![Input layer](img/nn-c.svg)
-
-## Input layer
-
-![Input layer](img/nn-d.svg)
-
-<!--## Hidden layers (Feed forward)
-
-![](img/nn-hidden2.svg)
-
-## Hidden layers (Feed forward)
-
-![](img/nn-hidden3.svg)
-
-## Hidden layers (Feed forward)
-
-![](img/nn-hidden4.svg) -->
-
-## Hidden layers (Feed forward)
-
-
-![Hidden layer](img/nn-hidden-a.svg)
 
 ## Recurrent NNs
 
@@ -197,9 +173,6 @@ BCs are more probable after a longer period without BCs.
 
 . . .
 
-LSTM is able to take into account it's own past internal state.
-
-![Recurrent Neural Net architecture \tiny (Christopher Olah)](img/RNN-unrolled.png)
 
 
 ## Postprocessing
@@ -210,9 +183,6 @@ NN output is
 - quickly changing
 - noisy
 
-## Postprocessing -- Low-pass filter
-
-![Low-pass convolution](img/postproc-convolve.svg)
 
 ## Postprocessing -- Low-pass filter
 
@@ -221,14 +191,10 @@ Gauss filter looks into future
 → Cut off filter and shift it
 
 
-![](img/gauss-cutoff.svg){width=65%}
-
 ## Thresholding / Triggering
 
 - Use areas of output > threshold t (0 < t < 1)
 - Trigger at local maximum
-
-![Example of the postprocessing process.](../img/postprocessing.pdf){#fig:postproc width=70%}
 
 # Evaluation
 
@@ -238,8 +204,6 @@ Gauss filter looks into future
 - Precision (portion of predictions that were correct)
 - Recall (portion of correct BCs that were predicted)
 - F1-Score (harmonic mean of Precision and Recall)
-
-![Evaluating the performance of a network while varying the threshold. Note the inverse relationship between _Precision_ and _Recall_.](../img/20170220200731.png){#fig:varythreshold width=70%}
 
 
 ## Lots of parameters to tune
