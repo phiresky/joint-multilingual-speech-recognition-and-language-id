@@ -10,6 +10,10 @@ header-includes:
     \hfill\usebeamertemplate***{navigation symbols}
     \hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
 - \usepackage{siunitx}
+- \usepackage{fontspec}
+- \usepackage{xeCJK}
+- \setCJKmainfont{FandolHei}
+- \setmainfont{Code2000}
 classoption: aspectratio=169
 ---
 
@@ -20,6 +24,28 @@ Recognize multiple languages at the same time
 - Use a single model for 10 languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU)
 - Check if transfer learning between languages work
 - two tasks: identify language AND recognize speech (simultaneously)
+
+## Problems
+
+- How to input audio?
+
+    → Spectral features of audio frames (e.g. in 10ms segments)
+
+. . .
+
+- How to output text?
+    (a) word embeddings (word2vec)
+    (b) characters (one-hot)
+        - Different char sets for languages (abc, äàąå, 漢字, ҐДЂ, ひらがな)
+        - Just unify all character sets (5500 total)
+
+. . .
+
+- How to output language id?
+    (a) separate softmax output
+    (b) [EN]Hello[CH]你好
+
+
 
 # Related Work
 
@@ -76,7 +102,7 @@ either just one feature map or they have some convolution issues
 
 ## Encoder - Bidirectional LSTM layer
 
-320 cells *2 = 640 outputs per time step
+320 cells for each direction → 640 outputs per time step
 
 ![Bidirectional LSTM](img/RNN-bidirectional.png)
 
@@ -84,8 +110,9 @@ http://colah.github.io/posts/2015-09-NN-Types-FP/
 
 ## Decoder (Attention-based)
 
+# Additions to the base model
 
-## 2. Decoder (CTC)
+## Second, Parallel Decoder (CTC)
 
 1. Input (same as before)
 1. Encoder (same as before)
@@ -117,12 +144,20 @@ https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-
 
 - adding a pure language model (RNN-LM) improves performance a bit
 
+## Language Confusion Matrix
+
+![Language identification (LID) accuracies/error rates (%). The diagonal elements correspond to the LID accuracies while the offdiagonal
+elements correspond to the LID error rates](img/20180629120038.png)
+
 ## Potential problems / future work?
 
+- nothing ensures language does not switch mid sentence → Apparently not an issue
+    - but maybe we want to allow this? (append utterances from different languages)
 - uniform random parameter initialization with [-0.1, 0.1] sounds bad
 - does not work in realtime (without complete input utterance)
     - Bidirectional LSTM in encoder
         - Could try one directional, but Language ID would completely break
+        - aggregate limited number of future frames (e.g. 500ms latency)
     - CTC in realtime?
     - Attention does not work in realtime
 - same latin characters are used for multiple languages, while others (RU, CN, JP) get their own character set
