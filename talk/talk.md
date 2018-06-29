@@ -14,6 +14,7 @@ header-includes:
 - \usepackage{xeCJK}
 - \setCJKmainfont{FandolHei}
 - \setmainfont{Code2000}
+- \let\vec\mathbf
 classoption: aspectratio=169
 ---
 
@@ -24,6 +25,8 @@ Recognize multiple languages at the same time
 - Use a single model for 10 languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU)
 - Check if transfer learning between languages work
 - two tasks: identify language AND recognize speech (simultaneously)
+
+- end to end: no lexicon, phoneme pronounciation maps, or manual alignment
 
 ## Problems
 
@@ -53,9 +56,12 @@ Recognize multiple languages at the same time
 
 (e.g. only attention)
 
-- Multilingual Speech Recognition With A Single End-To-End Model (Shubham Toshniwal)
+- _Multilingual Speech Recognition With A Single End-To-End Model_ (Shubham Toshniwal)
     - separate output for language id
     - only on 9 indian languages
+
+- _Hybrid CTC/Attention Architecture for End-to-End Speech Recognition_ (Watanabe et al. 2017).”
+    - Same as this paper except only one languages
 
 # Model overview
 
@@ -63,7 +69,7 @@ Recognize multiple languages at the same time
 
 ![Model overview (from the paper)](img/20180626154145.png)
 
-## Model overview
+## Simple Model overview
 
 1. Input: for each audio frame one 2d input image, 3 channels (like RGB image processing)
     - spectral features
@@ -110,19 +116,45 @@ http://colah.github.io/posts/2015-09-NN-Types-FP/
 
 ## Decoder (Attention-based)
 
-# Additions to the base model
+Input: $\vec{x}_1,\dots,\vec{x}_t$
+
+Output: $c_1,\dots,c_l$
+
+1. Encode whole sequence to $\vec{h}_1,\dots,\vec{h}_t$
+2. Calculate soft attention weights $a_{lt}$, based on
+    (a) attention on same encoded input frame for previous character ($a_{(l-1)t}$)
+    (b) current encoded state $\vec{h}_t$
+    (c) previous hidden state $\vec{q}_{l-1}$
+
+3. Sum encoded state with soft alignment: $\vec{r}_l = \sum_t{a_{lt}\vec{h}_t}$
+4. Decoder = $\text{Softmax}(\text{FC}(\text{LSTM}(\vec{r}_l, \vec{q}_{l-1}, c_{l-1})))$
+
+## Problems with this simple model
+
+- temporal attention too flexible, allows nonsensical alignments (in MT word order can change, in ASR not)
+- 
+
+# Additions to the simple model
 
 ## Second, Parallel Decoder (CTC)
 
 1. Input (same as before)
 1. Encoder (same as before)
-2. Decoder (CTC)
+2. Decoder
     fully connected layer per time stemp (converts 640 outputs from BLSTM -> N characters, softmax)
-3. One output character per input frame, normalized using CTC Loss
+3. → One output character per input frame, using CTC Loss
 
-* First, add blank character to set. e.g. Hello -> {H, E, L, O, -}
-* Inference: Remove duplicates: HHHH-EEEEEEEE-LL-LLL----OOOOOO → H-E-L-L-O → HELLO
+## CTC Crash Course
+
+Problem: output sequence shorter than input sequence
+
+* First, add blank character `"-"` to set. e.g. HELLO → $\{H, E, L, O, -\}$
+* Inference: Remove duplicates: HHHH-EEEEEEEE-LL-LLL-\-\-\-OOOOOO → H-E-L-L-O → HELLO
 * Training: HELLO → H-E-L-L-O → all combinations of char duplications are ok
+
+→ Enforces monotonic alignment
+
+* Efficient computation using Viterbi / forward-backward algorithm
 
 https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-classification-3797e43a86c
 
@@ -137,12 +169,16 @@ https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-
 
 - Training objective function: 0.5 * CTC loss + 0.5 * Attention loss + 0.1 RNN-LM loss
 
-- Inference via beam search on attention output weighted by objective function
+- Inference via beam search on attention output weighted by objective function (non-trivial for partial hypothesis)
+
+![Hybrid CTC/attention-based end-to-end architecture](img/20180629140340.png)
 
 
 ## Conclusions
 
 - adding a pure language model (RNN-LM) improves performance a bit
+
+- [On single language ASR] "Surprisingly, the method achieved performance comparable to, and in some cases superior to, several state-ofthe-art HMM/DNN ASR systems [...] when both multiobjective learning and joint decoding are used."
 
 ## Language Confusion Matrix
 
@@ -157,13 +193,15 @@ elements correspond to the LID error rates](img/20180629120038.png)
 - does not work in realtime (without complete input utterance)
     - Bidirectional LSTM in encoder
         - Could try one directional, but Language ID would completely break
-        - aggregate limited number of future frames (e.g. 500ms latency)
+        - aggregate limited number of future frames (e.g. add 500ms latency between input and output)
     - CTC in realtime?
     - Attention does not work in realtime
 - same latin characters are used for multiple languages, while others (RU, CN, JP) get their own character set
 
 
+## ...
 
+![](img/who-would-win-speech-recognition.png)
 
 
 
