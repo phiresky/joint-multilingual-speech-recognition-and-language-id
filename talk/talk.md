@@ -37,7 +37,7 @@ Recognize multiple languages at the same time
 . . .
 
 - How to output text?
-    (a) word embeddings (word2vec) (would need fixed dictionary = bad)
+    (a) word embeddings (word2vec) (would need fixed dictionary)
     (b) characters (one-hot)
         - Different char sets for languages (abc, äàąå, 漢字, ҐДЂ, ひらがな)
         - Just unify all character sets (5500 total)
@@ -54,7 +54,7 @@ Recognize multiple languages at the same time
 
 ## Related Work
 
-(e.g. only attention)
+<!-- (e.g. only attention) -->
 
 - _Multilingual Speech Recognition With A Single End-To-End Model_ (Shubham Toshniwal)
     - separate output for language id
@@ -72,16 +72,15 @@ Recognize multiple languages at the same time
 ## Simple Model overview
 
 1. Input: for each audio frame one 2d input image, 3 channels (like RGB image processing)
-    - spectral features
 2. Encoder
     #. VGGNet Convolutional NN (first 6 layers)
-    #. One bidirectional LSTM layer (320 cells x2)
+    #. One bidirectional LSTM layer
 3. Decoder (Attention + one directional LSTM)
     #. Soft Attention for each input frame to each output character
-    #. LSTM (300 cells)
-    #. fully connected layer (converts 300 outputs from LSTM → N characters softmax)
+    #. LSTM Layer
+    #. Fully connected layer (per time step)
 4. Output
-    - N characters from union of all languages (softmax)
+    - N characters from union of all languages (one-hot / softmax)
 
 
 ## Input
@@ -92,7 +91,7 @@ Recognize multiple languages at the same time
 * second channel: delta spectral features
 * third channel: deltadelta spectral features
 
-probably cepstral? fourier, fundamental frequency variation? etc
+"To use the same dimensional input features, we used 40-dimensional filterbank features with 3-dimensional pitch features implemented in Kaldi [33]"
 
 either just one feature map or they have some convolution issues
 
@@ -108,7 +107,7 @@ either just one feature map or they have some convolution issues
 
 ## Encoder - Bidirectional LSTM layer
 
-320 cells for each direction → 640 outputs per time step
+320 cells for each direction → 640 outputs per time step ($\vec{h}_t$)
 
 ![Bidirectional LSTM](img/RNN-bidirectional.png)
 
@@ -122,7 +121,7 @@ Output: $c_1,\dots,c_l$
 
 1. Encode whole sequence to $\vec{h}_1,\dots,\vec{h}_t$
 2. Calculate soft attention weights $a_{lt}$, based on
-    (a) $a_{(l-1)t}$ (attention on same input for previous character)
+    (a) $a_{(l-1)t}$ (attention on same input for previous output)
     (b) current encoded state $\vec{h}_t$
     (c) previous hidden state $\vec{q}_{l-1}$
 
@@ -133,20 +132,21 @@ Output: $c_1,\dots,c_l$
 
 ## Problems with this simple model
 
-- pure temporal attention too flexible, allows nonsensical alignments (in MT word order can change, in ASR not)
-- languages must be implicitly modeled
+- Pure temporal attention too flexible, allows nonsensical alignments
+    - Intuition: In MT word order can change, in ASR not
+- Languages must be implicitly modeled
 
 # Additions to the simple model
 
-## Second, Parallel Decoder (CTC)
+## Problem 1: "Pure temporal attention too flexible"
 
-"pure temporal attention too flexible"
+Add a second, Parallel Decoder with CTC
 
 1. Input (same as before)
 1. Encoder (same as before)
 2. Decoder
 
-    fully connected layer per time stemp (converts 640 outputs from BLSTM -> N characters, softmax)
+    fully connected softmax layer per time stemp (converts 640 outputs from BLSTM → N characters)
 3. → One output character per input frame, using CTC Loss
 
 ## CTC Crash Course
@@ -168,34 +168,44 @@ Problem: output sequence shorter than input sequence
 → Enforces monotonic alignment
 
 * Efficient computation using Viterbi / forward-backward algorithm
+* Loss = negative log of GT probability
 
-https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-classification-3797e43a86c
+<https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-classification-3797e43a86c>
 
-## RNN-LM
+## Problem 2: "Languages must be implicitly modeled"
 
-"languages must be implicitly modeled"
+Add a RNN-LM
 
-- Model distribution of characters in languages (ignores input speech)
-
+- Model distribution of character sequences in languages (ignores input speech)
+- Trained seperately 
 
 ## Combine both decoders + RNN-LM
 
-![Hybrid CTC/attention-based end-to-end architecture](img/20180629140340.png){width=50%}
 
+![Hybrid CTC/attention-based end-to-end architecture (RNN-LM not shown)](img/20180629140340.png){width=50%}
+
+## Final loss function
+
+
+$$\mathcal{L}_{\text{MTL}} = \lambda \log p_{ctc} (C|X) + (1 - \lambda) \log p_{att}(C|X) + \gamma \log p_{\text{rnnlm}}(C) $$
+
+$\lambda = 0.5$, $\gamma = 0.1$
 
 ## Training
 
-- Training objective function: 0.5 * CTC loss + 0.5 * Attention loss + 0.1 RNN-LM loss
+- Inference via beam search on attention output weighted by loss function
 
-- Inference via beam search on attention output weighted by objective function (non-trivial for partial hypothesis)
-
-- AdaDelta optimization
+- AdaDelta optimization, 15 epochs
 
 ## Conclusions
 
 - adding a pure language model (RNN-LM) improves performance a bit
 
 - [On single language ASR] "Surprisingly, the method achieved performance comparable to, and in some cases superior to, several state-ofthe-art HMM/DNN ASR systems [...] when both multiobjective learning and joint decoding are used."
+
+## Result Table
+
+![Character Error Rates (CERs) of language-dependent and language-independent ASR experiments for 7 and 10 multilingual setups.](img/20180701122411.png){height=60%}
 
 ## Language Confusion Matrix
 
@@ -204,25 +214,29 @@ elements correspond to the LID error rates](img/20180629120038.png)
 
 ## Potential problems / future work?
 
-- nothing ensures language does not switch mid sentence → Apparently not an issue
+- Nothing ensures language does not switch mid sentence → Apparently not an issue
     - but maybe we want to allow this? (append utterances from different languages)
 
 . . .
-- uniform random parameter initialization with [-0.1, 0.1] sounds bad
+
+- Uniform random parameter initialization with [-0.1, 0.1] sounds bad
 
 . . .
-- does not work in realtime (without complete input utterance)
+
+- Does not work in realtime (without complete input utterance)
     - Bidirectional LSTM in encoder
         - Could try one directional, but Language ID would completely break
         - aggregate limited number of future frames (e.g. add 500ms latency between input and output)
-    - CTC in realtime?
+    - Does CTC work in real time?
     - Attention does not work in realtime
 
 . . .
 
-- Unbalanced language sets
-- same latin characters are used for multiple languages, while others (RU, CN, JP) get their own character set
+- Unbalanced language sets (500h CH, 2.9h PR)
+- Same latin characters are used for multiple languages, while others (RU, CH, JP) get their own character set
+    - Try transliterating them to Latin?
 
+# Thank you for your attention
 
 ## ...
 
