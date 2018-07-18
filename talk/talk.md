@@ -187,7 +187,7 @@ Add a RNN-LM
 ## Final loss function
 
 
-$$\mathcal{L}_{\text{MTL}} = \lambda \log p_{ctc} (C|X) + (1 - \lambda) \log p_{att}(C|X) + \gamma \log p_{\text{rnnlm}}(C) $$
+$$\mathcal{L}_{\text{MTL}} = \lambda \log p_{\text{ctc}} (C|X) + (1 - \lambda) \log p_{\text{att}}(C|X) + \gamma \log p_{\text{rnnlm}}(C) $$
 
 $\lambda = 0.5$, $\gamma = 0.1$
 
