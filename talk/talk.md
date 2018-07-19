@@ -22,22 +22,21 @@ classoption: aspectratio=169
 
 Recognize multiple languages at the same time
 
+- Two tasks: identify language AND recognize speech (simultaneously)
 - Use a single model for 10 languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU)
 - Find out if transfer learning between languages work
-- Two tasks: identify language AND recognize speech (simultaneously)
-
 - End to end: Directly train sequence to sequence, no lexicon, phoneme pronounciation maps, or manual alignment
 
 ## Problems
 
 - How to input audio?
 
-    → Spectral features of audio frames (e.g. in 10ms segments)
+    → Spectral features of audio frames (e.g. in 20ms segments)
 
 . . .
 
 - How to output text?
-    (a) word embeddings (word2vec) (would need fixed dictionary)
+    (a) \textcolor{gray}{word embeddings (word2vec) (would need fixed dictionary)}
     (b) characters (one-hot)
         - Different char sets for languages (abc, äàąå, 漢字, ҐДЂ, ひらがな)
         - Just unify all character sets (5500 total)
@@ -45,23 +44,10 @@ Recognize multiple languages at the same time
 . . .
 
 - How to output language id?
-    (a) separate one-hot output
+    (a) \textcolor{gray}{separate one-hot output}
     (b) as a special character: "`[EN]Hello`" or "`[CH]你好`"
 
 
-
-# Related Work
-
-## Related Work
-
-<!-- (e.g. only attention) -->
-
-- _Multilingual Speech Recognition With A Single End-To-End Model_ (Shubham Toshniwal)
-    - separate output for language id
-    - only on 9 indian languages, hard to compare
-
-- _Hybrid CTC/Attention Architecture for End-to-End Speech Recognition_ (Watanabe et al. 2017)
-    - Same as this paper except only one language and more detailed
 
 # Model overview
 
@@ -76,13 +62,10 @@ Recognize multiple languages at the same time
 ## Simple Model overview
 
 1. Input: Basically a spectrogram as a 2D image
-2. Encoder
-    #. VGGNet Convolutional NN (first 6 layers)
-    #. One bidirectional LSTM layer
+2. Encoder (CNN + LSTM)
 3. Decoder (Attention + one directional LSTM)
     #. Soft Attention for each input frame to each output character
     #. LSTM Layer
-    #. Fully connected layer (per time step)
 4. Output
     - N characters from union of all languages (one-hot / softmax)
 
@@ -127,7 +110,7 @@ Output: $c_1,\dots,c_l$
 2. Calculate soft attention weights $a_{lt}$, based on
     (a) $a_{(l-1)t}$ (attention on same input for previous output)
     (b) current encoded state $\vec{h}_t$
-    (c) previous hidden state $\vec{q}_{l-1}$
+    (c) previous hidden decoder state $\vec{q}_{l-1}$
 
 . . .
 
@@ -150,7 +133,7 @@ Add a second, Parallel Decoder with CTC
 1. Encoder (same as before)
 2. Decoder
 
-    fully connected softmax layer per time stemp (converts 640 outputs from BLSTM → N characters)
+    softmax layer per time stemp (converts 640 outputs from BLSTM → N characters)
 3. → One output character per input frame, using CTC Loss
 
 ## CTC Crash Course
@@ -169,10 +152,10 @@ Problem: output sequence shorter than input sequence
 
 . . .
 
-→ Enforces monotonic alignment
-
 * Efficient computation using Viterbi / forward-backward algorithm
-* Loss = negative log of GT probability
+* Loss = - log of GT probability
+
+→ Enforces monotonic alignment
 
 <https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-classification-3797e43a86c>
 
@@ -193,7 +176,7 @@ Add a RNN-LM
 
 $$\mathcal{L}_{\text{MTL}} = \lambda \log p_{\text{ctc}} (C|X) + (1 - \lambda) \log p_{\text{att}}(C|X) + \gamma \log p_{\text{rnnlm}}(C) $$
 
-$\lambda = 0.5$, $\gamma = 0.1$
+$$\lambda = 0.5, \gamma = 0.1$$
 
 ## Training / Inference
 
@@ -243,15 +226,15 @@ elements correspond to the LID error rates](img/20180629120038.png)
 - Same latin characters are used for multiple languages, while others (RU, CH, JP) get their own character set
     - Try transliterating them to Latin?
 
-## Future Work?
+## Future Work (Opinion)
 
 
-- Does not work in realtime (without complete input utterance)
+- Does not work online (without complete input utterance)
     - Bidirectional LSTM in encoder
         - Could try one directional, but Language ID would completely break
         - aggregate limited number of future frames (e.g. add 500ms latency between input and output)
-    - Does CTC work in real time?
     - Attention does not work in realtime
+    - CTC should work online
 
 # Thank you for your _attention_
 
@@ -265,6 +248,18 @@ elements correspond to the LID error rates](img/20180629120038.png)
 
 ![](img/20180701122411.png)
 
+
+
+## Related Work
+
+<!-- (e.g. only attention) -->
+
+- _Multilingual Speech Recognition With A Single End-To-End Model_ (Shubham Toshniwal, Google)
+    - separate output for language id
+    - only on 9 indian languages, hard to compare
+
+- _Hybrid CTC/Attention Architecture for End-to-End Speech Recognition_ (Watanabe et al. 2017)
+    - Same as this paper except only one language and more detailed
 
 ## ...
 
