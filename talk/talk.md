@@ -23,7 +23,7 @@ classoption: aspectratio=169
 Recognize multiple languages at the same time
 
 - Use a single model for 10 languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU)
-- Check if transfer learning between languages work
+- Find out if transfer learning between languages work
 - Two tasks: identify language AND recognize speech (simultaneously)
 
 - End to end: Directly train sequence to sequence, no lexicon, phoneme pronounciation maps, or manual alignment
@@ -46,7 +46,7 @@ Recognize multiple languages at the same time
 
 - How to output language id?
     (a) separate one-hot output
-    (b) as a special character: `[EN]Hello [CH]你好`
+    (b) as a special character: "`[EN]Hello`" or "`[CH]你好`"
 
 
 
@@ -60,18 +60,22 @@ Recognize multiple languages at the same time
     - separate output for language id
     - only on 9 indian languages, hard to compare
 
-- _Hybrid CTC/Attention Architecture for End-to-End Speech Recognition_ (Watanabe et al. 2017).”
+- _Hybrid CTC/Attention Architecture for End-to-End Speech Recognition_ (Watanabe et al. 2017)
     - Same as this paper except only one language and more detailed
 
 # Model overview
 
 ## Model overview
 
-![Model overview (from the paper)](img/20180626154145.png)
+![Model overview (from the paper)](img/20180626154145a.png)
+
+## Model overview
+
+![Model overview (from the paper)](img/20180626154145b.png)
 
 ## Simple Model overview
 
-1. Input: for each audio frame one 2d input image, 3 channels (like RGB image processing)
+1. Input: Basically a spectrogram as a 2D image
 2. Encoder
     #. VGGNet Convolutional NN (first 6 layers)
     #. One bidirectional LSTM layer
@@ -87,13 +91,14 @@ Recognize multiple languages at the same time
 
 (Ab)use of image processing pipeline - input formatted like a RGB image
 
+x=time, y=feature index
+
 * first channel: spectral features
 * second channel: delta spectral features
 * third channel: deltadelta spectral features
 
-"To use the same dimensional input features, we used 40-dimensional filterbank features with 3-dimensional pitch features implemented in Kaldi [33]"
 
-either just one feature map or they have some convolution issues
+
 
 ## Encoder - VGG Net Architecture
 
@@ -103,7 +108,6 @@ either just one feature map or they have some convolution issues
 
 ![VGG Net - first 6 layers](img/vgg16-cutoff.png)
 
-(actual input dimensions are not mentioned)
 
 ## Encoder - Bidirectional LSTM layer
 
@@ -119,7 +123,7 @@ Input: $\vec{x}_1,\dots,\vec{x}_t$
 
 Output: $c_1,\dots,c_l$
 
-1. Encode whole sequence to $\vec{h}_1,\dots,\vec{h}_t$
+1. Encode whole sequence to $\vec{h}_1,\dots,\vec{h}_t$ (via VGG+BLSTM)
 2. Calculate soft attention weights $a_{lt}$, based on
     (a) $a_{(l-1)t}$ (attention on same input for previous output)
     (b) current encoded state $\vec{h}_t$
@@ -133,7 +137,7 @@ Output: $c_1,\dots,c_l$
 ## Problems with this simple model
 
 - Pure temporal attention too flexible, allows nonsensical alignments
-    - Intuition: In MT word order can change, in ASR not
+    - Intuition: In MT word order can change, in ASR it can not
 - Languages must be implicitly modeled
 
 # Additions to the simple model
@@ -191,21 +195,26 @@ $$\mathcal{L}_{\text{MTL}} = \lambda \log p_{\text{ctc}} (C|X) + (1 - \lambda) \
 
 $\lambda = 0.5$, $\gamma = 0.1$
 
-## Training
-
-- Inference via beam search on attention output weighted by loss function
+## Training / Inference
 
 - AdaDelta optimization, 15 epochs
 
-## Conclusions
+- Inference via beam search on attention output weighted by loss function
 
-- adding a pure language model (RNN-LM) improves performance a bit
 
-- [On single language ASR] "Surprisingly, the method achieved performance comparable to, and in some cases superior to, several state-ofthe-art HMM/DNN ASR systems [...] when both multiobjective learning and joint decoding are used."
+# Results
 
-## Result Table
+## Results
 
-![Character Error Rates (CERs) of language-dependent and language-independent ASR experiments for 7 and 10 multilingual setups.](img/20180701122411.png){height=60%}
+![Character Error Rates (abbrev.)](img/20180701122411-ov.png){width=100%}
+
+- VGG-CNN improves it (by 7%)
+- RNN-LM improves it (by 3%)
+- Adding data in other languages improves it (by 9%)
+
+<!-- Character Error Rates (CERs) of language-dependent and language-independent ASR experiments for 7 and 10 multilingual setups. -->
+
+
 
 ## Language Confusion Matrix
 
@@ -214,14 +223,28 @@ elements correspond to the LID error rates](img/20180629120038.png)
 
 ## Potential problems / future work?
 
-- Nothing ensures language does not switch mid sentence → Apparently not an issue
-    - but maybe we want to allow this? (append utterances from different languages)
+- Only fed with a single language utterance at a time
+    - maybe we want to allow switching? (append utterances from different languages)
 
 . . .
 
-- Uniform random parameter initialization with [-0.1, 0.1] sounds bad
+- Uniform random parameter initialization with $[-0.1, 0.1]$ seems statistically unsound? (use Xavier / Hu)
 
 . . .
+
+
+- Input feature convolution is weird
+    - _\[...\] we used 40-dimensional filterbank features with 3-dimensional pitch features_
+    - redundancy (delta, deltadelta)
+
+. . .
+
+- Unbalanced language sets (500h CH, 2.9h PR)
+- Same latin characters are used for multiple languages, while others (RU, CH, JP) get their own character set
+    - Try transliterating them to Latin?
+
+## Future Work?
+
 
 - Does not work in realtime (without complete input utterance)
     - Bidirectional LSTM in encoder
@@ -230,13 +253,18 @@ elements correspond to the LID error rates](img/20180629120038.png)
     - Does CTC work in real time?
     - Attention does not work in realtime
 
-. . .
+# Thank you for your _attention_
 
-- Unbalanced language sets (500h CH, 2.9h PR)
-- Same latin characters are used for multiple languages, while others (RU, CH, JP) get their own character set
-    - Try transliterating them to Latin?
+## Full Results Table
 
-# Thank you for your attention
+
+<!-- 
+- adding a pure language model (RNN-LM) improves performance a bit
+- [On single language ASR] "Surprisingly, the method achieved performance comparable to, and in some cases superior to, several state-ofthe-art HMM/DNN ASR systems [...] when both multiobjective learning and joint decoding are used."
+-->
+
+![](img/20180701122411.png)
+
 
 ## ...
 
