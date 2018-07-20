@@ -63,7 +63,7 @@ Recognize multiple languages at the same time
 
 1. Input: Basically a spectrogram as a 2D image
 2. Encoder (CNN + LSTM)
-3. Decoder (Attention + one directional LSTM)
+3. Decoder
     #. Soft Attention for each input frame to each output character
     #. LSTM Layer
 4. Output
@@ -133,7 +133,7 @@ Add a second, Parallel Decoder with CTC
 1. Encoder (same as before)
 2. Decoder
 
-    softmax layer per time stemp (converts 640 outputs from BLSTM → N characters)
+    softmax layer per time step (converts 640 outputs from BLSTM → N characters)
 3. → One output character per input frame, using CTC Loss
 
 ## CTC Crash Course
@@ -157,7 +157,7 @@ Problem: output sequence shorter than input sequence
 
 → Enforces monotonic alignment
 
-<https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-classification-3797e43a86c>
+<!-- <https://towardsdatascience.com/intuitively-understanding-connectionist-temporal-classification-3797e43a86c> -->
 
 ## Problem 2: "Languages must be implicitly modeled"
 
