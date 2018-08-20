@@ -9,6 +9,7 @@ pandoc \
 	--filter pandoc-crossref \
 	--filter pandoc-citeproc \
 	--bibliography=bib.bib \
+	--number-sections \
 	--standalone \
 	-o build/paper.pdf
 

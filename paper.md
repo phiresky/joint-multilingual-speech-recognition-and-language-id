@@ -1,7 +1,6 @@
 ---
-title: Language Independent End-to-End Architecture For Joint Language and Speech Recognition (2017)
-subtitle:
-    Watanabe, S.; Hori, T.; Hershey, J.R. 
+title: Summary of "Language Independent End-to-End Architecture For Joint Language and Speech Recognition (2017)" by Watanabe, S.; Hori, T.; Hershey, J.R. 
+# author: Me
 classoption: twocolumn
 papersize: a4paper
 csl: ieee.csl
@@ -11,7 +10,7 @@ header-includes:
 - \usepackage{CJKutf8}
 ---
 
-## Motivation / Goal
+# Motivation / Goal
 
 Recognize multiple languages at the same time
 
@@ -21,7 +20,7 @@ Recognize multiple languages at the same time
 - End to end: Directly train sequence to sequence, no lexicon, phoneme pronounciation maps, or manual alignment
 
 
-## Related Work
+# Related Work
 
 <!-- (e.g. only attention) -->
 
@@ -32,6 +31,8 @@ Recognize multiple languages at the same time
 - _Hybrid CTC/Attention Architecture for End-to-End Speech Recognition_ (Watanabe et al. 2017) [@wa17]
     - Same as this paper except only one language and more detailed
 
+
+# Model description
 
 ## Input and output format decisions
 
@@ -105,53 +106,38 @@ With the model described so far, the neural network needs to implicitly learn a 
 
 The final loss function is a simple linear combination of the loss functions of the attention decoder, the CTC decoder, and the language model. The two decoders are weighted equally ($\lambda=0.5$), and the language model is weighted at 1/10 of the decoders together ($\gamma = 0.1$).
 
-$$\mathcal{L}_{\text{MTL}} = \lambda \log p_{\text{ctc}} (C|X) + (1 - \lambda) \log p_{\text{att}}(C|X) + \gamma \log p_{\text{rnn-lm}}(C) $$
+
+\begin{align}
+\mathcal{L}_{\text{MTL}} & = \lambda \log p_{\text{ctc}} (C|X) \\
+ & + (1 - \lambda) \log p_{\text{att}}(C|X) \\
+ & + \gamma \log p_{\text{rnn-lm}}(C) 
+\end{align}
+
 
 The authors use the AdaDelta optimizer and train for 15 epochs. The inference is done via beam search on the attention output weighted by the above loss function.
 
-## Results
+# Results
 
-[@Fig:cer] shows the average character error rate for all languages for different experiments. Comparing the first two columns shows that adding the convolutional network in front of the LSTM encoder improves performance by 7%. The authors do not provide a significance analysis, but the data set is of all languages together is very large.
+[@Fig:cer] shows the average character error rate for all languages for different experiments. Comparing the second and third columns shows that adding the convolutional network in front of the LSTM encoder improves performance by 7%. The fourth column shows that the RNN-LM improves performance, though not by much (3%). Adding data from three more languages (NL, RU and PT) increases the performance for the _other_ 7 languages by 9%, which shows that transfer learning between the languages works. Note that the authors do not provide a significance analysis, but the data set is of all languages together is very large. The authors also do not provide a baseline or results with only one of both decoders.
 
 ![Character Error Rates (abbrev.)](img/20180701122411-ov.png){#fig:cer}
 
-- VGG-CNN improves it (by 7%)
-- RNN-LM improves it (by 3%)
-- Adding data in other languages improves it (by 9%)
-
-<!-- Character Error Rates (CERs) of language-dependent and language-independent ASR experiments for 7 and 10 multilingual setups. -->
-
-
-
-## Language Confusion Matrix
+[@Fig:liderror] shows that the language identification task has very good results. The only strong confusion is that Spanish is often (30%) mistaken for Italian, but not the other way around. The authors do not provide an interpretation for this.
 
 ![Language identification (LID) accuracies/error rates (%). The diagonal elements correspond to the LID accuracies while the offdiagonal
-elements correspond to the LID error rates](img/20180629120038.png)
+elements correspond to the LID error rates](img/20180629120038.png){#fig:liderror}
 
-## Potential problems / future work? {#sec:futurework}
+# Potential problems / future work? {#sec:futurework}
 
 - Only fed with a single language utterance at a time
     - maybe we want to allow switching? (append utterances from different languages)
-
-. . .
-
 - Uniform random parameter initialization with $[-0.1, 0.1]$ seems statistically unsound? (use Xavier / Hu)
-
-. . .
-
-
 - Input feature convolution is weird
     - _\[...\] we used 40-dimensional filterbank features with 3-dimensional pitch features_
     - redundancy (delta, deltadelta)
-
-. . .
-
 - Unbalanced language sets (500h CH, 2.9h PR)
 - Same latin characters are used for multiple languages, while others (RU, CH, JP) get their own character set
     - Try transliterating them to Latin?
-
-## Future Work (Opinion)
-
 
 - Does not work online (without complete input utterance)
     - Bidirectional LSTM in encoder
@@ -160,20 +146,9 @@ elements correspond to the LID error rates](img/20180629120038.png)
     - Attention does not work in realtime
     - CTC should work online
 
-# Thank you for your _attention_
-
-## Full Results Table
 
 
 <!-- 
 - adding a pure language model (RNN-LM) improves performance a bit
 - [On single language ASR] "Surprisingly, the method achieved performance comparable to, and in some cases superior to, several state-ofthe-art HMM/DNN ASR systems [...] when both multiobjective learning and joint decoding are used."
 -->
-
-![](img/20180701122411.png)
-
-
-
-## ...
-
-![](img/who-would-win-speech-recognition.png)
