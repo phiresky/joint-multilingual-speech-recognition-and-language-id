@@ -2,13 +2,13 @@
 
 export TEXINPUTS=wissdoc:
 
-rsync -a --delete img tbl template/ bib.bib build
+# rsync -a --delete img tbl template/ bib.bib talk/img build
 
 pandoc \
 	paper.md \
+	--filter pandoc-crossref \
 	--filter pandoc-citeproc \
 	--bibliography=bib.bib \
-	--filter pandoc-crossref \
 	--standalone \
 	-o build/paper.pdf
 
