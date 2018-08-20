@@ -2,7 +2,7 @@
 title: Summary of "Language Independent End-to-End Architecture For Joint Language and Speech Recognition (2017)" by Watanabe, S.; Hori, T.; Hershey, J.R. 
 # author: Me
 classoption: twocolumn
-papersize: a4paper
+papersize: a4
 csl: ieee.csl
 header-includes:
 - \usepackage{siunitx}
