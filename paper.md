@@ -2,20 +2,12 @@
 title: Language Independent End-to-End Architecture For Joint Language and Speech Recognition (2017)
 subtitle:
     Watanabe, S.; Hori, T.; Hershey, J.R. 
+classoption: twocolumn
+papersiz: a4paper
 header-includes:
-- |-
-   \def\svhline{\hline}
-   \setbeamertemplate{sidebar right}{}
-    \setbeamertemplate{footline}{%
-    \hfill\usebeamertemplate***{navigation symbols}
-    \hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
 - \usepackage{siunitx}
-- \usepackage{fontspec}
-- \usepackage{xeCJK}
-- \setCJKmainfont{FandolHei}
-- \setmainfont{Code2000}
-- \let\vec\mathbf
-classoption: aspectratio=169
+- \usepackage{xcolor}
+- \usepackage{CJKutf8}
 ---
 
 ## Motivation / Goal
@@ -27,7 +19,11 @@ Recognize multiple languages at the same time
 - Find out if transfer learning between languages work
 - End to end: Directly train sequence to sequence, no lexicon, phoneme pronounciation maps, or manual alignment
 
-## Problems
+## Input and Output format decisions
+
+Apart from the model architecture, there are two main decisions to be made: How the audio should be input into the system, and what the output should look like.
+
+For the input format, the authors chose the common method of extracting spectral features from the audio file, and chunking it into frames of e.g. 10ms. There is no description of 
 
 - How to input audio?
 
@@ -38,14 +34,14 @@ Recognize multiple languages at the same time
 - How to output text?
     (a) \textcolor{gray}{word embeddings (word2vec) (would need fixed dictionary)}
     (b) characters (one-hot)
-        - Different char sets for languages (abc, äàąå, 漢字, ҐДЂ, ひらがな)
+        - Different char sets for languages (latin, cyrillic, CJK)
         - Just unify all character sets (5500 total)
 
 . . .
 
 - How to output language id?
     (a) \textcolor{gray}{separate one-hot output}
-    (b) as a special character: "`[EN]Hello`" or "`[CH]你好`"
+    (b) as a special character: "`[EN]Hello`" or "\begin{CJK}{UTF8}{gbsn}[CH]你好\end{CJK}"
 
 
 

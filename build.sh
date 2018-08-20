@@ -5,15 +5,14 @@ export TEXINPUTS=wissdoc:
 rsync -a --delete img tbl template/ bib.bib build
 
 pandoc \
-	thesis.md \
-	--natbib \
+	paper.md \
+	--filter pandoc-citeproc \
+	--bibliography=bib.bib \
 	--filter pandoc-crossref \
 	--standalone \
-	--template template/diplarb.tex \
-	--top-level-division=chapter \
-	--highlight-style monochrome \
-	-o build/thesis.tex
+	-o build/paper.pdf
 
+: '
 (
 	cd build
 	texfot pdflatex -interaction=batchmode thesis.tex >/dev/null
@@ -23,3 +22,5 @@ pandoc \
 	echo -e "\e[31mFinal run\e[0m"
 	texfot pdflatex -interaction=nonstopmode thesis.tex
 )
+
+'
