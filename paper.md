@@ -152,3 +152,5 @@ elements correspond to the LID error rates](img/20180629120038.png){#fig:liderro
 - adding a pure language model (RNN-LM) improves performance a bit
 - [On single language ASR] "Surprisingly, the method achieved performance comparable to, and in some cases superior to, several state-ofthe-art HMM/DNN ASR systems [...] when both multiobjective learning and joint decoding are used."
 -->
+
+# References
