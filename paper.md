@@ -1,6 +1,6 @@
 ---
 title: Summary of "Language Independent End-to-End Architecture For Joint Language and Speech Recognition (2017)" by Watanabe, S.; Hori, T.; Hershey, J.R. 
-# author: Me
+author: Author
 classoption: twocolumn
 papersize: a4
 csl: ieee.csl
@@ -8,6 +8,9 @@ header-includes:
 - \usepackage{siunitx}
 - \usepackage{xcolor}
 - \usepackage{CJKutf8}
+- \usepackage{template/iwslt09}
+- \renewcommand{\textrightarrow}{$\rightarrow$}
+- \address{}
 ---
 
 # Motivation / Goal
@@ -153,4 +156,6 @@ elements correspond to the LID error rates](img/20180629120038.png){#fig:liderro
 - [On single language ASR] "Surprisingly, the method achieved performance comparable to, and in some cases superior to, several state-ofthe-art HMM/DNN ASR systems [...] when both multiobjective learning and joint decoding are used."
 -->
 
-# References
+<!-- # References -->
+
+\section{References}
