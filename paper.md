@@ -15,7 +15,7 @@ header-includes:
 
 # Motivation and Goals
 
-The paper [@wa17a] is a follow-up to the authors' previous paper [@wa17]. The goal is to extend the same end-to-end architecture to recognize speech in multiple languages. In addition, the authors want to explicitly identify the spoken language. The model is trained jointly for all of the ten languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU) in an end-to-end fashion, i.e. it is directly trained from input speech sequence to output text sequence, with no manual alignment, no lexicon, and no phoneme pronounciation maps. The model is shared between the languages. The results should show whether transfer learning between languages works by checking whether performance for one languages increases when adding data from a different language.
+The given paper [@wa17a] is a follow-up to the authors' previous paper [@wa17]. The goal is to extend the same end-to-end architecture using hybrid Attention and Connectionist Temporal Classification (CTC) to recognize speech in multiple languages. In addition, the authors want to explicitly identify the spoken language. The model is trained jointly for all of the ten languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU) in an end-to-end fashion, i.e. it is directly trained from input speech sequence to output text sequence, with no manual alignment, no lexicon, and no phoneme pronounciation maps. The model is fully shared between the languages. The results should show whether transfer learning between languages works by checking whether performance for one languages increases when adding data from a different language.
 
 <!--
 
@@ -38,13 +38,13 @@ The paper [@wa17a] is a follow-up to the authors' previous paper [@wa17]. The go
 
 Apart from the model architecture, there are two main decisions to be made: How the audio should be input into the system, and what the output should look like.
 
-For the input format, the authors chose the common method of extracting spectral features from the audio file, and chunking it into frames of e.g. 10ms. There is no description of what the exact features are. Because the architecture is very similar to the one the same authors mention in [@wa17], we can assume the input structure to be similar. [@wa17] mentions 40 features from the output of a filter bank, and three dimensions from simple pitch features. These are simply concatenated into a 42-dimensional input feature vector, which causes a potential issue described in [@sec:futurework].
+For the input format, the authors chose the common method of extracting spectral features from the audio file, and chunking it into frames of e.g. 10ms. There is no description of what the exact features are. Because the architecture is very similar to the one the same authors mention in [@wa17], we can assume the input structure to be similar. [@wa17] mentions 40 features from the output of a filter bank, and three dimensions from simple pitch features. These are simply concatenated into a 43-dimensional input feature vector, which causes a potential issue described in [@sec:futurework].
 
 ### Output
 
 There are multiple formats that are viable for text output in a end-to-end neural network. Mainly we can either output words as a whole (using one-hot or word embeddings like word2vec [@mi13]) or single characters. For speech recognition it makes sense to output single characters, since that way no fixed dictionary is needed and the network can learn to output words not seen before in the training data. To allow multilingual output, the authors propose to simply unify all the character sets (latin, cyrillic, CJK) to get a total of 5500 characters.
 
-For the language identification output, the authors propose adding a special "language-tag" character that is prepended to the output, for example "`[EN]Hello`" or "\begin{CJK}{UTF8}{gbsn}[CH]你好\end{CJK}". An alternative would be to add a separate one-hot encoded language id output as seen in [@to17].
+For the language identification output, the authors propose adding a special "language-tag" character that is prepended to the output, for example "`[EN]Hello`" or "`[ES]Hola`". An alternative would be to add a separate one-hot encoded language id output as seen in [@to17].
 
 ![Input and output structure overview (from the paper)](img/20180626154145a.png)
 
@@ -53,24 +53,24 @@ For the language identification output, the authors propose adding a special "la
 
 ## Base Model overview
 
-The authors chose a encoder-decoder architecture, with a CNN+LSTM based encoder and two parallel decoders, one using Soft Attention, one using Connectionist temporal classification (CTC).
+The authors chose a encoder-decoder architecture, with a CNN+LSTM-based encoder and two parallel decoders, one using Soft Attention, one using Connectionist temporal classification (CTC).
 
 
 ## Input Encoder
 
-The authors use an image processing pipeline for the encoder. The input audio is thus formatted like an RGB image, with the y coordinate being the feature index and x being time. The first channel is the spectral features described in [@sec:input], and the second and third channel are delta and deltadelta features of the first channel.
+The authors use an image processing pipeline for the encoder. The input audio is thus formatted like an RGB image, with the y coordinate being the feature index and x being time. The first "color" channel is the spectral features described in [@sec:input], and the second and third channel are delta and deltadelta features of the first channel over time.
 
-The encoder consists of two parts, a convolution network and a recurrent network. The convolutional network is taken directly from the first six layers of the VGG Net architecture [@vgg], as seen in [@fig:vgg]. Due to the two pooling layers, the dimensionality of the spectral input image is reduced 4 times in both the time and feature dimension. For simplicity, we will refer to $t$ as 1/4th of the input time dimension, so the encoded state can be indexed by $t$.
+The encoder consists of two parts, a convolutional network and a recurrent network. The convolutional network is taken directly from the first six layers of the VGG Net architecture [@vgg], as seen in [@fig:vgg]. Due to the two pooling layers, the dimensionality of the spectral input image is reduced 4 times in both the time and feature dimension. For simplicity, we will refer to $t$ as 1/4th of the input time dimension, so the encoded state can be indexed by $t$.
 
-![VGG Net for image processing - first 6 layers [@vgg]](img/vgg16-cutoff.png){#fig:vgg}
+![Original VGG Net for image processing - first 6 layers [@vgg]. For our use, the input dimension is $4t\times 43\times 3$.](img/vgg16-cutoff.png){#fig:vgg}
 
-The convolved input is then fed into a bidirectional LSTM with 320 cells in each direction, which results in a encoded vector dimension ($h_t$) of 640 scalars per time step $t$.
+The convolved input is then fed into a bidirectional LSTM with 320 cells in each direction, which results in a encoded vector dimension ($\vec{h}_t$) of 640 scalars per time step $t$.
 
 This hidden state is then decoded with two separate decoders in parallel, one based on attention and one based on CTC.
 
 ## Decoder A (Attention-based)
 
-First the input sequence $\vec{x}_1,\dots,\vec{x}_{4t}$ is encoded to $\vec{h}_1,\dots,\vec{h}_t$ with the above described VGG+BLSTM. The goal is to get $l \leq t$ output characters $c_1,\dots,c_l$. The soft attention weights $a_{lt}$ are calculated based on three values: The attention on the same input for the previous output ($a_{(l-1)t}$), the current encoded state $\vec{h}_t$, and the previous hidden decoder state $\vec{q}_{l-1}$.
+First the input sequence $\vec{x}_1,\dots,\vec{x}_{4t}$ is encoded to $\vec{h}_1,\dots,\vec{h}_t$ with the VGG+BLSTM described above. The goal is to get $l \leq t$ output characters $c_1,\dots,c_l$. The soft attention weights $a_{lt}$ are calculated based on three values: The attention on the same input for the previous output ($a_{(l-1)t}$), the current encoded state $\vec{h}_t$, and the previous hidden decoder state $\vec{q}_{l-1}$.
 
 The encoded state is then combined weighted with the soft alignment to get the input of the decoder network $\vec{r}_l = \sum_t{a_{lt}\vec{h}_t}$. The decoder is another (unidirectional) LSTM layer, followed by a softmax layer:
 
@@ -80,9 +80,9 @@ Using this decoder alone without any additions is possible, but the authors argu
 
 ## Decoder B (CTC-based)
 
-The input and encoder are the same as before. After the encoder, a simple softmax layer per time step is added that directly converts the 640 outputs ($\vec{h}_t$ from the encoder into one of the N output characters. This results in one output character per timestep $t$, which is then reduced to a flexible number of output characters using the CTC loss function [@gr06].
+The input and encoder are the same as before. After the encoder, a simple softmax layer per time step is added that directly converts the 640 outputs from the encoder $\vec{h}_t$ into one of the N output characters. This results in one output character per timestep $t$, which is then reduced to a flexible number of output characters using the CTC loss function [@gr06].
 
-As a simple explanation, CTC works by adding a blank character `"-"` to the output character set. For example, if we only allow the output HELLO our output set would be $\{H, E, L, O, -\}$. For inference, first all duplicate characters are removed and then all blank symbols. For example: `HHHH-EEEEEEEE-LL-LLL----OOOOOO → H-E-L-L-O → HELLO`. Note that the double `L` sequence is retained since there is a blank symbol between two blocks of `L` symbols. For training, we simply define all combinations of character duplications that result in the ground truth at inference time to be correct. This results in a unambiguous mapping from the CTC output to the corresponding text output. This means that the neural network is able learn the correct alignment using character duplications and the blank symbol.
+As a simple explanation, CTC works by adding a blank character `"-"` to the output character set. For example, if we only allow the output HELLO our output set would be $\{H, E, L, O, -\}$. For inference, first all duplicate characters are removed and then all blank symbols. For example: `HHHH-EEEEEEEE-LL-LLL----OOOOOO → H-E-L-L-O → HELLO`. Note that the double `L` sequence is retained since there is a blank symbol between two blocks of `L` symbols. For training, we simply define all combinations of character duplications that result in the ground truth at inference time to be correct. This results in a unambiguous mapping from the CTC output to the corresponding text output. This means that the neural network is able learn the correct alignment by utilizing character duplications and the blank symbol.
 
 The loss function for this decoder is the negative logarithm of the ground truth probability the network predicts. This probability can be efficiently computed using the Viterbi / forward-backward algorithm [@gr06].
 
