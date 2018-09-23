@@ -6,6 +6,7 @@ export TEXINPUTS=wissdoc:
 
 pandoc \
 	paper.md \
+	-V author="${AUTHOR:-Author}" \
 	--filter pandoc-crossref \
 	--filter pandoc-citeproc \
 	--bibliography=bib.bib \

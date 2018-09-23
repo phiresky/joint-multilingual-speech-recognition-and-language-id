@@ -15,7 +15,7 @@ header-includes:
 
 # Motivation and Goals
 
-The given paper [@wa17a] is a follow-up to the authors' previous paper [@wa17]. The goal is to extend the same end-to-end architecture using hybrid Attention and Connectionist Temporal Classification (CTC) to recognize speech in multiple languages. In addition, the authors want to explicitly identify the spoken language. The model is trained jointly for all of the ten languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU) in an end-to-end fashion, i.e. it is directly trained from input speech sequence to output text sequence, with no manual alignment, no lexicon, and no phoneme pronounciation maps. The model is fully shared between the languages. The results should show whether transfer learning between languages works by checking whether performance for one languages increases when adding data from a different language.
+The given paper [@wa17a] is a follow-up to the authors' previous paper _Hybrid CTC/Attention Architecture for End-to-End Speech Recognition_ [@wa17]. The goal is to extend the same end-to-end architecture using hybrid attention and Connectionist Temporal Classification (CTC) to recognize speech in multiple languages. In addition, the authors want to explicitly identify the spoken language. The model is trained jointly for all of the ten languages (EN, JP, CH, DE, ES, FR, IT, NL, PT, RU) in an end-to-end fashion, i.e. it is directly trained from input speech sequence to output text sequence, with no manual alignment, no lexicon, and no phoneme pronounciation maps. The model is fully shared between the languages. The results should show whether transfer learning between languages works by checking whether performance for one languages increases when adding data from a different language.
 
 <!--
 
@@ -44,7 +44,7 @@ For the input format, the authors chose the common method of extracting spectral
 
 There are multiple formats that are viable for text output in a end-to-end neural network. Mainly we can either output words as a whole (using one-hot or word embeddings like word2vec [@mi13]) or single characters. For speech recognition it makes sense to output single characters, since that way no fixed dictionary is needed and the network can learn to output words not seen before in the training data. To allow multilingual output, the authors propose to simply unify all the character sets (latin, cyrillic, CJK) to get a total of 5500 characters.
 
-For the language identification output, the authors propose adding a special "language-tag" character that is prepended to the output, for example "`[EN]Hello`" or "`[ES]Hola`". An alternative would be to add a separate one-hot encoded language id output as seen in [@to17].
+For the language identification output, the authors propose adding a special "language-tag" character that is prepended to the output, for example "`[EN]Hello`" or "`[ES]Hola`". An alternative would be to add a separate one-hot encoded Language ID output as seen in [@to17].
 
 ![Input and output structure overview (from the paper)](img/20180626154145a.png)
 
@@ -53,7 +53,7 @@ For the language identification output, the authors propose adding a special "la
 
 ## Base Model overview
 
-The authors chose a encoder-decoder architecture, with a CNN+LSTM-based encoder and two parallel decoders, one using Soft Attention, one using Connectionist temporal classification (CTC).
+The authors chose a encoder-decoder architecture, with a CNN+LSTM-based encoder and two parallel decoders, one using Soft Attention, one using Connectionist Temporal Classification (CTC).
 
 
 ## Input Encoder
