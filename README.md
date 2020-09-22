@@ -1,5 +1,9 @@
 # Language Independent End-to-End Architecture For Joint Language and Speech Recognition (Seminar)
 
+As part of a university seminar, here's my summary and talk about the above mentioned paper.
+
+The compiled summary is in [build/paper.pdf](build/paper.pdf).
+
 
 ## Talk
 
